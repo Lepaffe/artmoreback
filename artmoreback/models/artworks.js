@@ -10,9 +10,7 @@ var artworkSchema = mongoose.Schema({
     technic: String,
     movement: String,
     category: String,
-    urlcloudinary: String,
-    
-
+    cloudinary: String,
 })
 
 module.exports = mongoose.model('artworks', artworkSchema)
