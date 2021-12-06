@@ -14,7 +14,6 @@ router.get('/', function (req, res, next) {
 router.get('/get-artwork-list', async function (req, res, next) {
   // lire tout le ArtwordkModel 
   var artworks = await ArtworkModel.find()
-  console.log(artworks)
   res.json({ artworks });
 });
 
@@ -22,9 +21,8 @@ router.get('/get-artwork-list', async function (req, res, next) {
 
 router.get('/get-artist-detail/:artworkId', async function (req, res, next) {
   // lire le ArtistModel en filtrant avec l'id de l'artiste et populate avec ses oeuvres
-  console.log(req.params.artworkId)
-  var artist = await ArtistModel.findOne({ artistArtwork: { $elemMatch: { _id: req.params.artworkId } } }).populate('artistArtwork')
-  console.log(artist)
+  const artworkId = req.params.artworkId;
+  var artist = await ArtistModel.findOne({ artistArtwork: { $in: artworkId } }).populate('artistArtwork')
   res.json({ artist });
 });
 module.exports = router;
