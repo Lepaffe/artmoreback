@@ -47,7 +47,8 @@ router.post('/sign-up', async function (req, res, next) {
     error.push('utilisateur déjà présent')
   }
 
-  if (req.body.name == ''
+  if (req.body.firstName == ''
+    || req.body.lastName == ''
     || req.body.email == ''
     || req.body.password == ''
   ) {
