@@ -115,7 +115,7 @@ router.post('/sign-in', async function (req, res, next) {
         error.push('Mot de passe incorrect')
       }
     } else {
-      error.push('E-mail incorrect')
+      error.push('Mail incorrect')
     }
   }
   console.log(token)
