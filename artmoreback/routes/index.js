@@ -44,14 +44,18 @@ router.post('/sign-up', async function (req, res, next) {
   })
 
   if (data != null) {
-    error.push('utilisateur déjà présent')
+    error.push('Cet e-mail est déjà utilisé.')
   }
 
-  if (req.body.name == ''
+  if (req.body.firstName == ''
+    || req.body.lastName == ''
     || req.body.email == ''
+    || req.body.city == ''
+    || req.body.birthday == ''
     || req.body.password == ''
+
   ) {
-    error.push('champs vides')
+    error.push('Tous les champs doivent être remplis.')
   }
 
   if (error.length == 0) {
@@ -61,7 +65,7 @@ router.post('/sign-up', async function (req, res, next) {
       firstName: req.body.firstName,
       lastName: req.body.lastName,
       city: req.body.city,
-      birthday: req.body.birthday,
+      birthday: Date.parse(req.body.birthday),
       mediums: JSON.parse(req.body.mediums),
       movements: JSON.parse(req.body.movements),
       expos: [],
@@ -93,7 +97,7 @@ router.post('/sign-in', async function (req, res, next) {
   if (req.body.email == ''
     || req.body.password == ''
   ) {
-    error.push('champs vides')
+    error.push('Tous les champs doivent être remplis.')
   }
 
   if (error.length == 0) {
@@ -108,10 +112,10 @@ router.post('/sign-in', async function (req, res, next) {
         token = user.token
       } else {
         result = false
-        error.push('mot de passe incorrect')
+        error.push('Mot de passe incorrect')
       }
     } else {
-      error.push('email incorrect')
+      error.push('E-mail incorrect')
     }
   }
   console.log(token)
