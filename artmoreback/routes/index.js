@@ -1,6 +1,9 @@
 var express = require('express');
 var router = express.Router();
 
+/* Appel API*/
+var request = require('sync-request');
+
 /* Require Models*/
 var ArtistModel = require('../models/artists')
 var ArtworkModel = require('../models/artworks')
@@ -185,6 +188,16 @@ router.post('/sign-in', async function (req, res, next) {
   res.json({ result, error, token })
 })
 
+/* Exhibitions Screen */
+
+router.get('/exhibitions', async function (req, res, next) {
+  var data = request('GET', "https://public.opendatasoft.com/api/records/1.0/search/?dataset=evenements-publics-cibul&q=&rows=80&facet=tags&facet=placename&facet=department&facet=region&facet=city&facet=date_start&facet=date_end&facet=pricing_info&facet=updated_at&facet=city_district&refine.date_start=2021&refine.tags=exposition&refine.date_end=2022")
+  // var dataParse = JSON.parse(data.body)
+  // console.log(dataParse.records)
+  var dataParse = JSON.parse(data.body)
+  console.log(dataParse.records)
+  res.json({ data: dataParse.records })
+})
 //Daily selection
 
 router.get('/get-daily-selection/:token', async function (req, res, next) {
