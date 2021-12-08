@@ -22,61 +22,60 @@ router.get('/get-artwork-list', async function (req, res, next) {
   res.json({ artworks });
 });
 
-<<<<<<< HEAD
 /* Artwork Screen */
 
-router.post('/add-artworklist', async function(req, res, next) {
+router.post('/add-artworklist', async function (req, res, next) {
   // update le tableau "artworkList" dans le model user afin d'ajouter l'object ID d'une oeuvre dans la base de donnée
- var result = await UserModel.updateOne({token: req.body.token}, {$push:{artworkList: {_id: req.body.artworkId}}})
- console.log(result)
- res.json({artwordSaved: true});
- });
+  var result = await UserModel.updateOne({ token: req.body.token }, { $push: { artworkList: { _id: req.body.artworkId } } })
+  console.log(result)
+  res.json({ artwordSaved: true });
+});
 
- /* Collection Screen */
+/* Collection Screen */
 
-router.get('/get-collection', async function(req, res, next) {
- // lire tout le ArtwordkModel 
- var collection = await UserModel.findOne({token:"qUCUV4u7XabXzg5VX3pfZOAMazHD9ZDV"}).populate('artworkList')
- res.json({ collection });
-  });
-   /* Collection Screen */
-
-router.get('/get-artist-collection', async function(req, res, next) {
+router.get('/get-collection', async function (req, res, next) {
   // lire tout le ArtwordkModel 
-  var artistCollection = await UserModel.findOne({token:"qUCUV4u7XabXzg5VX3pfZOAMazHD9ZDV"}).populate('artistList')
+  var collection = await UserModel.findOne({ token: "qUCUV4u7XabXzg5VX3pfZOAMazHD9ZDV" }).populate('artworkList')
+  res.json({ collection });
+});
+
+/* Collection Screen */
+
+router.get('/get-artist-collection', async function (req, res, next) {
+  // lire tout le ArtwordkModel 
+  var artistCollection = await UserModel.findOne({ token: "qUCUV4u7XabXzg5VX3pfZOAMazHD9ZDV" }).populate('artistList')
   res.json({ artistCollection });
-   });
-=======
-router.post('/like', async function (req,res,next){
+});
+
+router.post('/like', async function (req, res, next) {
   //si l'oeuvre est deja liké on ne la rajoute pas
-  let alreadyIn = await UserModel.findOne({token: req.body.token, artworkLiked:{$in: req.body.artworkId}})
-  if (!alreadyIn){
-    console.log( req.body.token, req.body.artworkId);
-    var result = await UserModel.updateOne({token: req.body.token}, { $push: {artworkLiked:{_id: req.body.artworkId}}})
-  } 
-  console.log ('result', result, alreadyIn);
-  res.json({result})
+  let alreadyIn = await UserModel.findOne({ token: req.body.token, artworkLiked: { $in: req.body.artworkId } })
+  if (!alreadyIn) {
+    console.log(req.body.token, req.body.artworkId);
+    var result = await UserModel.updateOne({ token: req.body.token }, { $push: { artworkLiked: { _id: req.body.artworkId } } })
+  }
+  console.log('result', result, alreadyIn);
+  res.json({ result })
 })
 
-router.post('/dislike', async function (req,res,next){
+router.post('/dislike', async function (req, res, next) {
   //si l'oeuvre est deja dans les Disliked on ne la rajoute pas
-  let alreadyIn = await UserModel.findOne({token: req.body.token, artworkDisliked:{$in: req.body.artworkId}})
-  
-  if (!alreadyIn){
+  let alreadyIn = await UserModel.findOne({ token: req.body.token, artworkDisliked: { $in: req.body.artworkId } })
+
+  if (!alreadyIn) {
     //on azjoute l'oeuvre aux Disliked
-    console.log( 'in ',req.body.token, req.body.artworkId);
-    var result = await UserModel.updateOne({token: req.body.token}, { $push: { artworkDisliked:{_id: req.body.artworkId}}})
+    console.log('in ', req.body.token, req.body.artworkId);
+    var result = await UserModel.updateOne({ token: req.body.token }, { $push: { artworkDisliked: { _id: req.body.artworkId } } })
     //on verifie que l'oeuvre n'etait pas dans les Liked
-    let isLiked = await UserModel.findOne({token: req.body.token, artworkLiked:{$in: req.body.artworkId}});
+    let isLiked = await UserModel.findOne({ token: req.body.token, artworkLiked: { $in: req.body.artworkId } });
     //on verifie que l'oeuvre n'est pas deja dans les Liked si oui on la retire des liked 
-    if (isLiked){
-      var result2 = await UserModel.updateOne({token: req.body.token}, { $pull: {artworkLiked:{$in: req.body.artworkId}}})
+    if (isLiked) {
+      var result2 = await UserModel.updateOne({ token: req.body.token }, { $pull: { artworkLiked: { $in: req.body.artworkId } } })
     }
-  } 
-  console.log('result', result, 'result2',result2 )
-  res.json({result})
+  }
+  console.log('result', result, 'result2', result2)
+  res.json({ result })
 })
->>>>>>> 52512a8a6a2a764e93cc7f8a7edd1a30ffdbbb5b
 
 /* Artist Screen */
 
@@ -87,13 +86,13 @@ router.get('/get-artist-detail/:artworkId', async function (req, res, next) {
   res.json({ artist });
 });
 
-router.post('/add-artistlist', async function(req, res, next) {
+router.post('/add-artistlist', async function (req, res, next) {
   console.log("coucou")
   // update le tableau "artworkList" dans le model user afin d'ajouter l'object ID d'une oeuvre dans la base de donnée
- var result2= await UserModel.updateOne({token:req.body.token}, {$push:{artistList: {_id:req.body.artistId}}})
- console.log(result2)
- res.json({artistSaved: true});
- });
+  var result2 = await UserModel.updateOne({ token: req.body.token }, { $push: { artistList: { _id: req.body.artistId } } })
+  console.log(result2)
+  res.json({ artistSaved: true });
+});
 
 /* Login Screen */
 router.post('/sign-up', async function (req, res, next) {
