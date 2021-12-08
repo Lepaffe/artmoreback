@@ -22,6 +22,30 @@ router.get('/get-artwork-list', async function (req, res, next) {
   res.json({ artworks });
 });
 
+/* Artwork Screen */
+
+router.post('/add-artworklist', async function(req, res, next) {
+  // update le tableau "artworkList" dans le model user afin d'ajouter l'object ID d'une oeuvre dans la base de donnée
+ var result = await UserModel.updateOne({token: req.body.token}, {$push:{artworkList: {_id: req.body.artworkId}}})
+ console.log(result)
+ res.json({artwordSaved: true});
+ });
+
+ /* Collection Screen */
+
+router.get('/get-collection', async function(req, res, next) {
+ // lire tout le ArtwordkModel 
+ var collection = await UserModel.findOne({token:"qUCUV4u7XabXzg5VX3pfZOAMazHD9ZDV"}).populate('artworkList')
+ res.json({ collection });
+  });
+   /* Collection Screen */
+
+router.get('/get-artist-collection', async function(req, res, next) {
+  // lire tout le ArtwordkModel 
+  var artistCollection = await UserModel.findOne({token:"qUCUV4u7XabXzg5VX3pfZOAMazHD9ZDV"}).populate('artistList')
+  res.json({ artistCollection });
+   });
+
 /* Artist Screen */
 
 router.get('/get-artist-detail/:artworkId', async function (req, res, next) {
@@ -30,6 +54,14 @@ router.get('/get-artist-detail/:artworkId', async function (req, res, next) {
   var artist = await ArtistModel.findOne({ artistArtwork: { $in: artworkId } }).populate('artistArtwork')
   res.json({ artist });
 });
+
+router.post('/add-artistlist', async function(req, res, next) {
+  console.log("coucou")
+  // update le tableau "artworkList" dans le model user afin d'ajouter l'object ID d'une oeuvre dans la base de donnée
+ var result2= await UserModel.updateOne({token:req.body.token}, {$push:{artistList: {_id:req.body.artistId}}})
+ console.log(result2)
+ res.json({artistSaved: true});
+ });
 
 /* Login Screen */
 router.post('/sign-up', async function (req, res, next) {
