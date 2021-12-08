@@ -13,6 +13,8 @@ const userSchema = mongoose.Schema({
     expos: [{ type: mongoose.Schema.Types.ObjectId, ref: 'expos' }],
     artistList: [{ type: mongoose.Schema.Types.ObjectId, ref: 'artists' }],
     artworkList: [{ type: mongoose.Schema.Types.ObjectId, ref: 'artworks' }],
+    artworkLiked:[{type: mongoose.Schema.Types.ObjectId, ref:'artworks'}],
+    artworkDisliked:[{type: mongoose.Schema.Types.ObjectId, ref:'artworks'}]
 })
 
 module.exports = mongoose.model('users', userSchema)
