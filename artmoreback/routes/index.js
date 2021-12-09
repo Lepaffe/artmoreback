@@ -9,6 +9,9 @@ var ArtistModel = require('../models/artists')
 var ArtworkModel = require('../models/artworks')
 var UserModel = require('../models/users')
 
+// import du module de reommandation
+var Recommend = require('../mymodules/recommend');
+
 /* sécuriser app*/
 var bcrypt = require('bcrypt');
 var uid2 = require('uid2');
@@ -21,7 +24,9 @@ router.get('/', function (req, res, next) {
 /* Swipe page. */
 router.get('/get-artwork-list', async function (req, res, next) {
   // lire tout le ArtwordkModel 
-  var artworks = await ArtworkModel.find()
+  var artworks = await ArtworkModel.find();
+  Recommend('ijsiBHEwiYfo92Zb2OsS-xqgZgPC5ppr');
+
   res.json({ artworks });
 });
 
@@ -169,7 +174,7 @@ router.post('/sign-up', async function (req, res, next) {
 })
 
 router.post('/sign-in', async function (req, res, next) {
-
+  
   var result = false
   var user = null
   var error = []
@@ -226,10 +231,10 @@ router.get('/get-daily-selection/:token', async function (req, res, next) {
   const user = await UserModel.findOne({ token: req.params.token })
 
   //on récupère les mouvements favoris de l'user
-  const userMovements = user.movements;
+  const userCategories = user.categories;
 
   //on récupère toutes les oeuvres qui possèdent un des mouvements pref de l'user (par exemple toutes les oeuvres Abstract)
-  let artworks = await ArtworkModel.find({ category: userMovements[0] })
+  let artworks = await ArtworkModel.find({ category: userCategories[0] })
 
   //on modifie l'ordre des éléments dans le tableau artworks pour avoir des artists différents
   const shuffleArray = array => {
