@@ -179,7 +179,7 @@ router.post('/sign-in', async function (req, res, next) {
   var user = null
   var error = []
   var token = null
-
+  
   if (req.body.email == ''
     || req.body.password == ''
   ) {
@@ -196,6 +196,7 @@ router.post('/sign-in', async function (req, res, next) {
       if (bcrypt.compareSync(req.body.password, user.password)) {
         result = true
         token = user.token
+
       } else {
         result = false
         error.push('Mot de passe incorrect')
