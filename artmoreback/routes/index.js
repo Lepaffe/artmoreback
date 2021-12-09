@@ -29,12 +29,15 @@ router.get('/get-artwork-list', async function (req, res, next) {
 
 router.post('/add-artworklist', async function (req, res, next) {
   // update le tableau "artworkList" dans le model user afin d'ajouter l'object ID d'une oeuvre dans la base de donnée
+  let alreadyAdded = await UserModel.findOne({ token: req.body.token, artworkList: { $in: req.body.artworkId } })
+  console.log("already", alreadyAdded)
+  if (!alreadyAdded) {
   var result = await UserModel.updateOne({ token: req.body.token }, { $push: { artworkList: { _id: req.body.artworkId } } })
+  }
   console.log(result)
   res.json({ artwordSaved: true });
 });
 
-<<<<<<< HEAD
  router.post('/delete-artworklist', async function(req, res, next) {
   
   // supprime un element de l'array artworkList du ModelUser dans la base de donnée
@@ -59,25 +62,6 @@ router.get('/get-artist-collection/:token', async function(req, res, next) {
   res.json({ artistCollection });
    });
 router.post('/like', async function (req,res,next){
-=======
-/* Collection Screen */
-
-router.get('/get-collection', async function (req, res, next) {
-  // lire tout le ArtwordkModel 
-  var collection = await UserModel.findOne({ token: "qUCUV4u7XabXzg5VX3pfZOAMazHD9ZDV" }).populate('artworkList')
-  res.json({ collection });
-});
-
-/* Collection Screen */
-
-router.get('/get-artist-collection', async function (req, res, next) {
-  // lire tout le ArtwordkModel 
-  var artistCollection = await UserModel.findOne({ token: "qUCUV4u7XabXzg5VX3pfZOAMazHD9ZDV" }).populate('artistList')
-  res.json({ artistCollection });
-});
-
-router.post('/like', async function (req, res, next) {
->>>>>>> c33ca4bdf7295fa71f98c62f9d944cc1bcd3c716
   //si l'oeuvre est deja liké on ne la rajoute pas
   let alreadyIn = await UserModel.findOne({ token: req.body.token, artworkLiked: { $in: req.body.artworkId } })
   if (!alreadyIn) {
@@ -90,21 +74,12 @@ router.post('/like', async function (req, res, next) {
 
 router.post('/dislike', async function (req, res, next) {
   //si l'oeuvre est deja dans les Disliked on ne la rajoute pas
-<<<<<<< HEAD
-  let alreadyIn = await UserModel.findOne({token: req.body.token, artworkDisliked:{$in: req.body.artworkId}})
-  
-  if (!alreadyIn){
-    //on ajoute l'oeuvre aux Disliked
-    console.log( 'in ',req.body.token, req.body.artworkId);
-    var result = await UserModel.updateOne({token: req.body.token}, { $push: { artworkDisliked:{_id: req.body.artworkId}}})
-=======
   let alreadyIn = await UserModel.findOne({ token: req.body.token, artworkDisliked: { $in: req.body.artworkId } })
 
   if (!alreadyIn) {
     //on azjoute l'oeuvre aux Disliked
     console.log('in ', req.body.token, req.body.artworkId);
     var result = await UserModel.updateOne({ token: req.body.token }, { $push: { artworkDisliked: { _id: req.body.artworkId } } })
->>>>>>> c33ca4bdf7295fa71f98c62f9d944cc1bcd3c716
     //on verifie que l'oeuvre n'etait pas dans les Liked
     let isLiked = await UserModel.findOne({ token: req.body.token, artworkLiked: { $in: req.body.artworkId } });
     //on verifie que l'oeuvre n'est pas deja dans les Liked si oui on la retire des liked 
@@ -127,19 +102,14 @@ router.get('/get-artist-detail/:artworkId', async function (req, res, next) {
 
 router.post('/add-artistlist', async function (req, res, next) {
   console.log("coucou")
-<<<<<<< HEAD
+  let alreadyAdded = await UserModel.findOne({ token: req.body.token, artistList: { $in: req.body.artworkId } })
+  if (!alreadyAdded) {
   // update le tableau "artist" dans le model user afin d'ajouter l'object ID d'une oeuvre dans la base de donnée
  var result2= await UserModel.updateOne({token:req.body.token}, {$push:{artistList: {_id:req.body.artistId}}})
- console.log(result2)
+  } 
+  console.log(result2)
  res.json({artistSaved: true});
  });
-=======
-  // update le tableau "artworkList" dans le model user afin d'ajouter l'object ID d'une oeuvre dans la base de donnée
-  var result2 = await UserModel.updateOne({ token: req.body.token }, { $push: { artistList: { _id: req.body.artistId } } })
-  console.log(result2)
-  res.json({ artistSaved: true });
-});
->>>>>>> c33ca4bdf7295fa71f98c62f9d944cc1bcd3c716
 
  router.post('/delete-artistlist', async function(req, res, next) {
   
@@ -156,6 +126,9 @@ router.post('/sign-up', async function (req, res, next) {
   var result = false
   var saveUser = null
   var token = null
+  var artistList= []
+  var artworkList= []
+  
 
   const data = await UserModel.findOne({
     email: req.body.email
@@ -202,7 +175,7 @@ router.post('/sign-up', async function (req, res, next) {
       token = saveUser.token
     }
   }
-  res.json({ result, error, token })
+  res.json({ result, error, token, artistList, artworkList })
 })
 
 router.post('/sign-in', async function (req, res, next) {
@@ -211,6 +184,8 @@ router.post('/sign-in', async function (req, res, next) {
   var user = null
   var error = []
   var token = null
+  var artistList= []
+  var artworkList= []
 
   if (req.body.email == ''
     || req.body.password == ''
@@ -228,6 +203,8 @@ router.post('/sign-in', async function (req, res, next) {
       if (bcrypt.compareSync(req.body.password, user.password)) {
         result = true
         token = user.token
+        artistList= user.artistList
+        artworkList= user.artworkList
       } else {
         result = false
         error.push('Mot de passe incorrect')
@@ -237,7 +214,7 @@ router.post('/sign-in', async function (req, res, next) {
     }
   }
   console.log(token)
-  res.json({ result, error, token })
+  res.json({ result, error, token , artistList, artworkList})
 })
 
 /* Exhibitions Screen */
