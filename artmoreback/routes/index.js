@@ -34,32 +34,6 @@ router.post('/add-artworklist', async function (req, res, next) {
   res.json({ artwordSaved: true });
 });
 
-<<<<<<< HEAD
- router.post('/delete-artworklist', async function(req, res, next) {
-  
-  // supprime un element de l'array artworkList du ModelUser dans la base de donnée
- var result3= await UserModel.updateOne({token: req.body.token}, { $pull: {artworkList:{$in: req.body.artworkId}}})
- console.log(result3)
- res.json({artworkDeleted: true});
- });
-
-
- /* Collection Screen */
-
-router.get('/get-collection/:token', async function(req, res, next) {
- // Récuperer la clé étrangère artworkList du UserModel en filtrant avec son token
- var collection = await UserModel.findOne({token:req.params.token}).populate('artworkList')
- res.json({ collection });
-  });
-   /* Collection Artist Screen */
-
-router.get('/get-artist-collection/:token', async function(req, res, next) {
-  // Récuperer la clé étrangère artistList du UserModel en filtrant avec son token
-  var artistCollection = await UserModel.findOne({token:req.params.token}).populate('artistList')
-  res.json({ artistCollection });
-   });
-router.post('/like', async function (req,res,next){
-=======
 /* Collection Screen */
 
 router.get('/get-collection', async function (req, res, next) {
@@ -77,7 +51,6 @@ router.get('/get-artist-collection', async function (req, res, next) {
 });
 
 router.post('/like', async function (req, res, next) {
->>>>>>> c33ca4bdf7295fa71f98c62f9d944cc1bcd3c716
   //si l'oeuvre est deja liké on ne la rajoute pas
   let alreadyIn = await UserModel.findOne({ token: req.body.token, artworkLiked: { $in: req.body.artworkId } })
   if (!alreadyIn) {
@@ -90,21 +63,12 @@ router.post('/like', async function (req, res, next) {
 
 router.post('/dislike', async function (req, res, next) {
   //si l'oeuvre est deja dans les Disliked on ne la rajoute pas
-<<<<<<< HEAD
-  let alreadyIn = await UserModel.findOne({token: req.body.token, artworkDisliked:{$in: req.body.artworkId}})
-  
-  if (!alreadyIn){
-    //on ajoute l'oeuvre aux Disliked
-    console.log( 'in ',req.body.token, req.body.artworkId);
-    var result = await UserModel.updateOne({token: req.body.token}, { $push: { artworkDisliked:{_id: req.body.artworkId}}})
-=======
   let alreadyIn = await UserModel.findOne({ token: req.body.token, artworkDisliked: { $in: req.body.artworkId } })
 
   if (!alreadyIn) {
     //on azjoute l'oeuvre aux Disliked
     console.log('in ', req.body.token, req.body.artworkId);
     var result = await UserModel.updateOne({ token: req.body.token }, { $push: { artworkDisliked: { _id: req.body.artworkId } } })
->>>>>>> c33ca4bdf7295fa71f98c62f9d944cc1bcd3c716
     //on verifie que l'oeuvre n'etait pas dans les Liked
     let isLiked = await UserModel.findOne({ token: req.body.token, artworkLiked: { $in: req.body.artworkId } });
     //on verifie que l'oeuvre n'est pas deja dans les Liked si oui on la retire des liked 
@@ -127,19 +91,11 @@ router.get('/get-artist-detail/:artworkId', async function (req, res, next) {
 
 router.post('/add-artistlist', async function (req, res, next) {
   console.log("coucou")
-<<<<<<< HEAD
-  // update le tableau "artist" dans le model user afin d'ajouter l'object ID d'une oeuvre dans la base de donnée
- var result2= await UserModel.updateOne({token:req.body.token}, {$push:{artistList: {_id:req.body.artistId}}})
- console.log(result2)
- res.json({artistSaved: true});
- });
-=======
   // update le tableau "artworkList" dans le model user afin d'ajouter l'object ID d'une oeuvre dans la base de donnée
   var result2 = await UserModel.updateOne({ token: req.body.token }, { $push: { artistList: { _id: req.body.artistId } } })
   console.log(result2)
   res.json({ artistSaved: true });
 });
->>>>>>> c33ca4bdf7295fa71f98c62f9d944cc1bcd3c716
 
  router.post('/delete-artistlist', async function(req, res, next) {
   
@@ -249,9 +205,10 @@ router.get('/get-exhibitions/:token', async function (req, res, next) {
   console.log(userCity)
 
   //on ajoute la ville du user comme paramètre dans la requête api pour cibler la ville du user
-  var data = request('GET', `https://public.opendatasoft.com/api/records/1.0/search/?dataset=evenements-publics-cibul&q=&rows=80&facet=tags&facet=placename&facet=department&facet=region&facet=city&facet=date_start&facet=date_end&facet=pricing_info&facet=updated_at&facet=city_district&refine.date_start=2021&refine.tags=exposition&refine.date_end=2022&refine.city=${userCity}`)
+  var data = request('GET', `https://public.opendatasoft.com/api/records/1.0/search/?dataset=evenements-publics-cibul&q=&rows=50&facet=tags&facet=placename&facet=department&facet=region&facet=city&facet=date_start&facet=date_end&facet=pricing_info&facet=updated_at&facet=city_district&refine.tags=Exposition&refine.date_end=2022&refine.city=${userCity}`)
   var dataParse = JSON.parse(data.body)
   console.log(dataParse.records)
+  console.log(dataParse.length)
   res.json({ data: dataParse.records })
 })
 
