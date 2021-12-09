@@ -148,7 +148,7 @@ router.post('/sign-up', async function (req, res, next) {
       city: req.body.city,
       birthday: Date.parse(req.body.birthday),
       mediums: JSON.parse(req.body.mediums),
-      movements: JSON.parse(req.body.movements),
+      categories: JSON.parse(req.body.categories),
       expos: [],
       email: req.body.email,
       artistList: [],
