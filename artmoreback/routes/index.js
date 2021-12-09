@@ -34,7 +34,11 @@ router.get('/get-artwork-list', async function (req, res, next) {
 
 router.post('/add-artworklist', async function (req, res, next) {
   // update le tableau "artworkList" dans le model user afin d'ajouter l'object ID d'une oeuvre dans la base de donnée
+  let alreadyAdded = await UserModel.findOne({ token: req.body.token, artworkList: { $in: req.body.artworkId } })
+  console.log("already", alreadyAdded)
+  if (!alreadyAdded) {
   var result = await UserModel.updateOne({ token: req.body.token }, { $push: { artworkList: { _id: req.body.artworkId } } })
+  }
   console.log(result)
   res.json({ artwordSaved: true });
 });
@@ -46,6 +50,7 @@ router.post('/delete-artworklist', async function (req, res, next) {
   console.log(result3)
   res.json({ artworkDeleted: true });
 });
+
 
 
 /* Collection Screen */
@@ -62,6 +67,7 @@ router.get('/get-artist-collection/:token', async function (req, res, next) {
   var artistCollection = await UserModel.findOne({ token: req.params.token }).populate('artistList')
   res.json({ artistCollection });
 });
+
 router.post('/like', async function (req, res, next) {
   //si l'oeuvre est deja liké on ne la rajoute pas
   let alreadyIn = await UserModel.findOne({ token: req.body.token, artworkLiked: { $in: req.body.artworkId } })
@@ -103,11 +109,14 @@ router.get('/get-artist-detail/:artworkId', async function (req, res, next) {
 
 router.post('/add-artistlist', async function (req, res, next) {
   console.log("coucou")
-  // update le tableau "artworkList" dans le model user afin d'ajouter l'object ID d'une oeuvre dans la base de donnée
-  var result2 = await UserModel.updateOne({ token: req.body.token }, { $push: { artistList: { _id: req.body.artistId } } })
+  let alreadyAdded = await UserModel.findOne({ token: req.body.token, artistList: { $in: req.body.artworkId } })
+  if (!alreadyAdded) {
+  // update le tableau "artist" dans le model user afin d'ajouter l'object ID d'une oeuvre dans la base de donnée
+ var result2= await UserModel.updateOne({token:req.body.token}, {$push:{artistList: {_id:req.body.artistId}}})
+  } 
   console.log(result2)
-  res.json({ artistSaved: true });
-});
+ res.json({artistSaved: true});
+ });
 
 router.post('/delete-artistlist', async function (req, res, next) {
 
@@ -124,6 +133,9 @@ router.post('/sign-up', async function (req, res, next) {
   var result = false
   var saveUser = null
   var token = null
+  var artistList= []
+  var artworkList= []
+  
 
   const data = await UserModel.findOne({
     email: req.body.email
@@ -170,7 +182,7 @@ router.post('/sign-up', async function (req, res, next) {
       token = saveUser.token
     }
   }
-  res.json({ result, error, token })
+  res.json({ result, error, token, artistList, artworkList })
 })
 
 router.post('/sign-in', async function (req, res, next) {
@@ -179,7 +191,9 @@ router.post('/sign-in', async function (req, res, next) {
   var user = null
   var error = []
   var token = null
-  
+  var artistList= []
+  var artworkList= []
+
   if (req.body.email == ''
     || req.body.password == ''
   ) {
@@ -196,7 +210,8 @@ router.post('/sign-in', async function (req, res, next) {
       if (bcrypt.compareSync(req.body.password, user.password)) {
         result = true
         token = user.token
-
+        artistList= user.artistList
+        artworkList= user.artworkList
       } else {
         result = false
         error.push('Mot de passe incorrect')
@@ -206,7 +221,7 @@ router.post('/sign-in', async function (req, res, next) {
     }
   }
   console.log(token)
-  res.json({ result, error, token })
+  res.json({ result, error, token , artistList, artworkList})
 })
 
 /* Get xxhibitions list Screen */
@@ -218,9 +233,10 @@ router.get('/get-exhibitions/:token', async function (req, res, next) {
   console.log(userCity)
 
   //on ajoute la ville du user comme paramètre dans la requête api pour cibler la ville du user
-  var data = request('GET', `https://public.opendatasoft.com/api/records/1.0/search/?dataset=evenements-publics-cibul&q=&rows=80&facet=tags&facet=placename&facet=department&facet=region&facet=city&facet=date_start&facet=date_end&facet=pricing_info&facet=updated_at&facet=city_district&refine.date_start=2021&refine.tags=exposition&refine.date_end=2022&refine.city=${userCity}`)
+  var data = request('GET', `https://public.opendatasoft.com/api/records/1.0/search/?dataset=evenements-publics-cibul&q=&rows=50&facet=tags&facet=placename&facet=department&facet=region&facet=city&facet=date_start&facet=date_end&facet=pricing_info&facet=updated_at&facet=city_district&refine.tags=Exposition&refine.date_end=2022&refine.city=${userCity}`)
   var dataParse = JSON.parse(data.body)
   console.log(dataParse.records)
+  console.log(dataParse.length)
   res.json({ data: dataParse.records })
 })
 
