@@ -9,6 +9,9 @@ var ArtistModel = require('../models/artists')
 var ArtworkModel = require('../models/artworks')
 var UserModel = require('../models/users')
 
+// import du module de reommandation
+var Recommend = require('../mymodules/recommend');
+
 /* sécuriser app*/
 var bcrypt = require('bcrypt');
 var uid2 = require('uid2');
@@ -21,7 +24,9 @@ router.get('/', function (req, res, next) {
 /* Swipe page. */
 router.get('/get-artwork-list', async function (req, res, next) {
   // lire tout le ArtwordkModel 
-  var artworks = await ArtworkModel.find()
+  var artworks = await ArtworkModel.find();
+  Recommend('ijsiBHEwiYfo92Zb2OsS-xqgZgPC5ppr');
+
   res.json({ artworks });
 });
 
@@ -34,22 +39,29 @@ router.post('/add-artworklist', async function (req, res, next) {
   res.json({ artwordSaved: true });
 });
 
+router.post('/delete-artworklist', async function (req, res, next) {
+
+  // supprime un element de l'array artworkList du ModelUser dans la base de donnée
+  var result3 = await UserModel.updateOne({ token: req.body.token }, { $pull: { artworkList: { $in: req.body.artworkId } } })
+  console.log(result3)
+  res.json({ artworkDeleted: true });
+});
+
+
 /* Collection Screen */
 
-router.get('/get-collection', async function (req, res, next) {
-  // lire tout le ArtwordkModel 
-  var collection = await UserModel.findOne({ token: "qUCUV4u7XabXzg5VX3pfZOAMazHD9ZDV" }).populate('artworkList')
+router.get('/get-collection/:token', async function (req, res, next) {
+  // Récuperer la clé étrangère artworkList du UserModel en filtrant avec son token
+  var collection = await UserModel.findOne({ token: req.params.token }).populate('artworkList')
   res.json({ collection });
 });
+/* Collection Artist Screen */
 
-/* Collection Screen */
-
-router.get('/get-artist-collection', async function (req, res, next) {
-  // lire tout le ArtwordkModel 
-  var artistCollection = await UserModel.findOne({ token: "qUCUV4u7XabXzg5VX3pfZOAMazHD9ZDV" }).populate('artistList')
+router.get('/get-artist-collection/:token', async function (req, res, next) {
+  // Récuperer la clé étrangère artistList du UserModel en filtrant avec son token
+  var artistCollection = await UserModel.findOne({ token: req.params.token }).populate('artistList')
   res.json({ artistCollection });
 });
-
 router.post('/like', async function (req, res, next) {
   //si l'oeuvre est deja liké on ne la rajoute pas
   let alreadyIn = await UserModel.findOne({ token: req.body.token, artworkLiked: { $in: req.body.artworkId } })
@@ -97,13 +109,13 @@ router.post('/add-artistlist', async function (req, res, next) {
   res.json({ artistSaved: true });
 });
 
- router.post('/delete-artistlist', async function(req, res, next) {
-  
+router.post('/delete-artistlist', async function (req, res, next) {
+
   // supprime un element de l'array artistList du ModelUser dans la base de donnée
- var result3= await UserModel.updateOne({token: req.body.token}, { $pull: {artistList:{$in: req.body.artistId}}})
- console.log(result3)
- res.json({artistDeleted: true});
- });
+  var result3 = await UserModel.updateOne({ token: req.body.token }, { $pull: { artistList: { $in: req.body.artistId } } })
+  console.log(result3)
+  res.json({ artistDeleted: true });
+});
 
 /* Login Screen */
 router.post('/sign-up', async function (req, res, next) {
@@ -141,7 +153,7 @@ router.post('/sign-up', async function (req, res, next) {
       city: req.body.city,
       birthday: Date.parse(req.body.birthday),
       mediums: JSON.parse(req.body.mediums),
-      movements: JSON.parse(req.body.movements),
+      categories: JSON.parse(req.body.categories),
       expos: [],
       email: req.body.email,
       artistList: [],
@@ -162,7 +174,7 @@ router.post('/sign-up', async function (req, res, next) {
 })
 
 router.post('/sign-in', async function (req, res, next) {
-
+  
   var result = false
   var user = null
   var error = []
@@ -220,10 +232,10 @@ router.get('/get-daily-selection/:token', async function (req, res, next) {
   const user = await UserModel.findOne({ token: req.params.token })
 
   //on récupère les mouvements favoris de l'user
-  const userMovements = user.movements;
+  const userCategories = user.categories;
 
   //on récupère toutes les oeuvres qui possèdent un des mouvements pref de l'user (par exemple toutes les oeuvres Abstract)
-  let artworks = await ArtworkModel.find({ category: userMovements[0] })
+  let artworks = await ArtworkModel.find({ category: userCategories[0] })
 
   //on modifie l'ordre des éléments dans le tableau artworks pour avoir des artists différents
   const shuffleArray = array => {
