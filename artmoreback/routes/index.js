@@ -174,7 +174,7 @@ router.post('/sign-up', async function (req, res, next) {
 })
 
 router.post('/sign-in', async function (req, res, next) {
-  
+
   var result = false
   var user = null
   var error = []
@@ -217,12 +217,12 @@ router.get('/get-exhibitions/:token', async function (req, res, next) {
   console.log(userCity)
 
   //on ajoute la ville du user comme paramètre dans la requête api pour cibler la ville du user
-  var data = request('GET', `https://public.opendatasoft.com/api/records/1.0/search/?dataset=evenements-publics-cibul&q=&rows=80&facet=tags&facet=placename&facet=department&facet=region&facet=city&facet=date_start&facet=date_end&facet=pricing_info&facet=updated_at&facet=city_district&refine.date_start=2021&refine.tags=exposition&refine.date_end=2022&refine.city=${userCity}`)
+  var data = request('GET', `https://public.opendatasoft.com/api/records/1.0/search/?dataset=evenements-publics-cibul&q=&rows=50&facet=tags&facet=placename&facet=department&facet=region&facet=city&facet=date_start&facet=date_end&facet=pricing_info&facet=updated_at&facet=city_district&refine.tags=Exposition&refine.date_end=2022&refine.city=${userCity}`)
   var dataParse = JSON.parse(data.body)
   console.log(dataParse.records)
+  console.log(dataParse.length)
   res.json({ data: dataParse.records })
 })
-
 
 //Daily selection
 
