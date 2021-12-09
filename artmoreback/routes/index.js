@@ -1,6 +1,9 @@
 var express = require('express');
 var router = express.Router();
 
+/* Appel API*/
+var request = require('sync-request');
+
 /* Require Models*/
 var ArtistModel = require('../models/artists')
 var ArtworkModel = require('../models/artworks')
@@ -24,13 +27,14 @@ router.get('/get-artwork-list', async function (req, res, next) {
 
 /* Artwork Screen */
 
-router.post('/add-artworklist', async function(req, res, next) {
+router.post('/add-artworklist', async function (req, res, next) {
   // update le tableau "artworkList" dans le model user afin d'ajouter l'object ID d'une oeuvre dans la base de donnée
- var result = await UserModel.updateOne({token: req.body.token}, {$push:{artworkList: {_id: req.body.artworkId}}})
- console.log(result)
- res.json({artwordSaved: true});
- });
+  var result = await UserModel.updateOne({ token: req.body.token }, { $push: { artworkList: { _id: req.body.artworkId } } })
+  console.log(result)
+  res.json({ artwordSaved: true });
+});
 
+<<<<<<< HEAD
  router.post('/delete-artworklist', async function(req, res, next) {
   
   // supprime un element de l'array artworkList du ModelUser dans la base de donnée
@@ -55,33 +59,61 @@ router.get('/get-artist-collection/:token', async function(req, res, next) {
   res.json({ artistCollection });
    });
 router.post('/like', async function (req,res,next){
+=======
+/* Collection Screen */
+
+router.get('/get-collection', async function (req, res, next) {
+  // lire tout le ArtwordkModel 
+  var collection = await UserModel.findOne({ token: "qUCUV4u7XabXzg5VX3pfZOAMazHD9ZDV" }).populate('artworkList')
+  res.json({ collection });
+});
+
+/* Collection Screen */
+
+router.get('/get-artist-collection', async function (req, res, next) {
+  // lire tout le ArtwordkModel 
+  var artistCollection = await UserModel.findOne({ token: "qUCUV4u7XabXzg5VX3pfZOAMazHD9ZDV" }).populate('artistList')
+  res.json({ artistCollection });
+});
+
+router.post('/like', async function (req, res, next) {
+>>>>>>> c33ca4bdf7295fa71f98c62f9d944cc1bcd3c716
   //si l'oeuvre est deja liké on ne la rajoute pas
-  let alreadyIn = await UserModel.findOne({token: req.body.token, artworkLiked:{$in: req.body.artworkId}})
-  if (!alreadyIn){
-    console.log( req.body.token, req.body.artworkId);
-    var result = await UserModel.updateOne({token: req.body.token}, { $push: {artworkLiked:{_id: req.body.artworkId}}})
-  } 
-  console.log ('result', result, alreadyIn);
-  res.json({result})
+  let alreadyIn = await UserModel.findOne({ token: req.body.token, artworkLiked: { $in: req.body.artworkId } })
+  if (!alreadyIn) {
+    console.log(req.body.token, req.body.artworkId);
+    var result = await UserModel.updateOne({ token: req.body.token }, { $push: { artworkLiked: { _id: req.body.artworkId } } })
+  }
+  console.log('result', result, alreadyIn);
+  res.json({ result })
 })
 
-router.post('/dislike', async function (req,res,next){
+router.post('/dislike', async function (req, res, next) {
   //si l'oeuvre est deja dans les Disliked on ne la rajoute pas
+<<<<<<< HEAD
   let alreadyIn = await UserModel.findOne({token: req.body.token, artworkDisliked:{$in: req.body.artworkId}})
   
   if (!alreadyIn){
     //on ajoute l'oeuvre aux Disliked
     console.log( 'in ',req.body.token, req.body.artworkId);
     var result = await UserModel.updateOne({token: req.body.token}, { $push: { artworkDisliked:{_id: req.body.artworkId}}})
+=======
+  let alreadyIn = await UserModel.findOne({ token: req.body.token, artworkDisliked: { $in: req.body.artworkId } })
+
+  if (!alreadyIn) {
+    //on azjoute l'oeuvre aux Disliked
+    console.log('in ', req.body.token, req.body.artworkId);
+    var result = await UserModel.updateOne({ token: req.body.token }, { $push: { artworkDisliked: { _id: req.body.artworkId } } })
+>>>>>>> c33ca4bdf7295fa71f98c62f9d944cc1bcd3c716
     //on verifie que l'oeuvre n'etait pas dans les Liked
-    let isLiked = await UserModel.findOne({token: req.body.token, artworkLiked:{$in: req.body.artworkId}});
+    let isLiked = await UserModel.findOne({ token: req.body.token, artworkLiked: { $in: req.body.artworkId } });
     //on verifie que l'oeuvre n'est pas deja dans les Liked si oui on la retire des liked 
-    if (isLiked){
-      var result2 = await UserModel.updateOne({token: req.body.token}, { $pull: {artworkLiked:{$in: req.body.artworkId}}})
+    if (isLiked) {
+      var result2 = await UserModel.updateOne({ token: req.body.token }, { $pull: { artworkLiked: { $in: req.body.artworkId } } })
     }
-  } 
-  console.log('result', result, 'result2',result2 )
-  res.json({result})
+  }
+  console.log('result', result, 'result2', result2)
+  res.json({ result })
 })
 
 /* Artist Screen */
@@ -93,13 +125,21 @@ router.get('/get-artist-detail/:artworkId', async function (req, res, next) {
   res.json({ artist });
 });
 
-router.post('/add-artistlist', async function(req, res, next) {
+router.post('/add-artistlist', async function (req, res, next) {
   console.log("coucou")
+<<<<<<< HEAD
   // update le tableau "artist" dans le model user afin d'ajouter l'object ID d'une oeuvre dans la base de donnée
  var result2= await UserModel.updateOne({token:req.body.token}, {$push:{artistList: {_id:req.body.artistId}}})
  console.log(result2)
  res.json({artistSaved: true});
  });
+=======
+  // update le tableau "artworkList" dans le model user afin d'ajouter l'object ID d'une oeuvre dans la base de donnée
+  var result2 = await UserModel.updateOne({ token: req.body.token }, { $push: { artistList: { _id: req.body.artistId } } })
+  console.log(result2)
+  res.json({ artistSaved: true });
+});
+>>>>>>> c33ca4bdf7295fa71f98c62f9d944cc1bcd3c716
 
  router.post('/delete-artistlist', async function(req, res, next) {
   
@@ -200,6 +240,16 @@ router.post('/sign-in', async function (req, res, next) {
   res.json({ result, error, token })
 })
 
+/* Exhibitions Screen */
+
+router.get('/exhibitions', async function (req, res, next) {
+  var data = request('GET', "https://public.opendatasoft.com/api/records/1.0/search/?dataset=evenements-publics-cibul&q=&rows=80&facet=tags&facet=placename&facet=department&facet=region&facet=city&facet=date_start&facet=date_end&facet=pricing_info&facet=updated_at&facet=city_district&refine.date_start=2021&refine.tags=exposition&refine.date_end=2022")
+  // var dataParse = JSON.parse(data.body)
+  // console.log(dataParse.records)
+  var dataParse = JSON.parse(data.body)
+  console.log(dataParse.records)
+  res.json({ data: dataParse.records })
+})
 //Daily selection
 
 router.get('/get-daily-selection/:token', async function (req, res, next) {
