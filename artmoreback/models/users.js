@@ -9,7 +9,7 @@ const userSchema = mongoose.Schema({
     password: String,
     token: String,
     mediums: [],
-    movements: [],
+    categories: [],
     expos: [{ type: mongoose.Schema.Types.ObjectId, ref: 'expos' }],
     artistList: [{ type: mongoose.Schema.Types.ObjectId, ref: 'artists' }],
     artworkList: [{ type: mongoose.Schema.Types.ObjectId, ref: 'artworks' }],
