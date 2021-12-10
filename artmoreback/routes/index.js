@@ -184,7 +184,7 @@ router.post('/sign-up', async function (req, res, next) {
       artworkList: [],
       password: hash,
       token: uid2(32),
-      daily: { day:-1, selection:[]}
+      daily: { day: -1, selection: [] }
     })
 
     saveUser = await newUser.save()
@@ -273,10 +273,10 @@ router.get('/get-exhibitions', async function (req, res, next) {
       address: el.fields.address,
       date_start: dateFormat(el.fields.date_start),
       date_end: dateFormat(el.fields.date_end)
-    } 
+    }
   })
   res.json({ listExpoBack })
-  console.log("nouvelle liste expo:" ,listExpoBack)
+  console.log("nouvelle liste expo:", listExpoBack)
 })
 
 
@@ -417,6 +417,14 @@ router.put('/update-categories/:token', async function (req, res, next) {
   const user = await UserModel.findOne({ token: req.params.token });
   const categories = user.categories
   res.json({ categories })
+})
+
+router.put('/update-mediums/:token', async function (req, res, next) {
+
+  await UserModel.updateOne({ token: req.params.token }, { mediums: JSON.parse(req.body.mediums) })
+  const user = await UserModel.findOne({ token: req.params.token });
+  const mediums = user.mediums
+  res.json({ mediums })
 })
 
 router.post('/update-avatar/:token', async function (req, res, next) {
