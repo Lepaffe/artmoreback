@@ -1,5 +1,15 @@
 var express = require('express');
 var router = express.Router();
+var uniqid = require('uniqid');
+var fs = require('fs');
+
+var cloudinary = require('cloudinary').v2;
+
+cloudinary.config({
+  cloud_name: 'cloudcapsule',
+  api_key: '441832217349769',
+  api_secret: '_V8FyVznkjQyNY3EApQmumUVK2Q'
+});
 
 /* Appel API*/
 var request = require('sync-request');
@@ -24,10 +34,10 @@ router.get('/', function (req, res, next) {
 /* Swipe page. */
 router.get('/get-artwork-list/:token', async function (req, res, next) {
   // appel de l'algo de selection 
-  var artworkSelections= await Recommend(req.params.token);
-  console.log('result',artworkSelections);
+  var artworkSelections = await Recommend(req.params.token);
+  console.log('result', artworkSelections);
 
-  res.json({ artworks:artworkSelections.swipeArray});
+  res.json({ artworks: artworkSelections.swipeArray });
 });
 
 /* Artwork Screen */
@@ -247,8 +257,8 @@ router.get('/get-exhibitions/:token', async function (req, res, next) {
 router.get('/get-daily-selection/:token', async function (req, res, next) {
 
   // appel de l'algo de selection 
-  var artworkSelections= await Recommend(req.params.token);
-  
+  var artworkSelections = await Recommend(req.params.token);
+
   //const user = await UserModel.findOne({ token: req.params.token })
 
   //on récupère les mouvements favoris de l'user
@@ -282,7 +292,7 @@ router.get('/get-daily-selection/:token', async function (req, res, next) {
   //on créé le tableau qui sera renvoyé au front, où chaque élément est un objet qui contient l'oeuvre avec l'artiste qui lui correspond
   const artworksWithArtists = [{ artwork: artworkSelections.dailyArray[0], artist: artist0 }, { artwork: artworkSelections.dailyArray[1], artist: artist1 },
   { artwork: artworkSelections.dailyArray[2], artist: artist2 }, { artwork: artworkSelections.dailyArray[3], artist: artist3 }]
- 
+
   res.json({ artworksWithArtists });
 });
 
@@ -294,8 +304,9 @@ router.get('/get-username/:token', async function (req, res, next) {
 
   const firstName = user.firstName;
   const lastName = user.lastName;
+  const img = user.img
 
-  res.json({ firstName, lastName })
+  res.json({ firstName, lastName, img })
 })
 
 //Settings screen
@@ -350,6 +361,24 @@ router.put('/update-categories/:token', async function (req, res, next) {
   const user = await UserModel.findOne({ token: req.params.token });
   const categories = user.categories
   res.json({ categories })
+})
+
+router.post('/update-avatar/:token', async function (req, res, next) {
+
+  var pictureName = './tmp/' + uniqid() + '.jpg';
+  var resultCopy = await req.files.avatar.mv(pictureName);
+
+  if (!resultCopy) {
+    var resultCloudinary = await cloudinary.uploader.upload(pictureName);
+    await UserModel.updateOne({ token: req.params.token }, { img: resultCloudinary.url })
+  }
+
+  fs.unlinkSync(pictureName);
+
+  const user = await UserModel.findOne({ token: req.params.token });
+  const img = user.img
+
+  res.json({ img })
 })
 
 module.exports = router;
