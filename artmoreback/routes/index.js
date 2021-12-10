@@ -236,21 +236,76 @@ router.post('/sign-in', async function (req, res, next) {
   res.json({ result, error, token, artistList, artworkList })
 })
 
-/* Get xxhibitions list Screen */
+// router.get('/get-exhibitions', async function (req, res, next) {
+//   //on récupère la ville du user
+//   const user = await UserModel.findOne({ token: req.params.token })
+//   //on ajoute la ville du user comme paramètre dans la requête api pour cibler la ville du user
+//   var data = request('GET', `https://public.opendatasoft.com/api/records/1.0/search/?dataset=evenements-publics-cibul&q=&rows=50&facet=tags&facet=placename&facet=department&facet=region&facet=city&facet=date_start&facet=date_end&facet=pricing_info&facet=updated_at&facet=city_district&refine.tags=Exposition&refine.date_end=2022&refine.city=${userCity}`)
+//   var dataParse = JSON.parse(data.body)
+//   console.log(dataParse.records)
+//   console.log(dataParse.length)
+//   res.json({ data: dataParse.records })
+// })
+
+/* Get exhibitions list Screen */
+
+router.get('/get-exhibitions', async function (req, res, next) {
+
+  // fonction pour reformater la date
+  var dateFormat = function (date) {
+    var newDate = new Date(date)
+    var format = (newDate.getMonth() + 1) + "." + newDate.getDate() + "." + newDate.getFullYear()
+    return format;
+  };
+
+  // on récupère toutes les expositions
+  var data = request('GET', `https://public.opendatasoft.com/api/records/1.0/search/?dataset=evenements-publics-cibul&q=&rows=105&facet=tags&facet=placename&facet=department&facet=region&facet=city&facet=date_start&facet=date_end&facet=pricing_info&facet=updated_at&facet=city_district&refine.tags=exposition&refine.date_end=2022`)
+  var dataParse = JSON.parse(data.body)
+
+  // on map pour récupérer que les infos nécessaires
+  const listExpoBack = dataParse.records.map(el => {
+    return {
+      img: el.fields.image,
+      title: el.fields.title,
+      city: el.fields.city,
+      place: el.fields.placename,
+      address: el.fields.address,
+      date_start: dateFormat(el.fields.date_start),
+      date_end: dateFormat(el.fields.date_end)
+    } 
+  })
+  res.json({ listExpoBack })
+  console.log("nouvelle liste expo:" ,listExpoBack)
+})
+
 
 router.get('/get-exhibitions/:token', async function (req, res, next) {
+
+  var dateFormat = function (date) {
+    var newDate = new Date(date)
+    var format = (newDate.getMonth() + 1) + "." + newDate.getDate() + "." + newDate.getFullYear()
+    return format;
+  };
   //on récupère la ville du user
   const user = await UserModel.findOne({ token: req.params.token })
   const userCity = user.city;
   console.log(userCity)
+  var data = request('GET', `https://public.opendatasoft.com/api/records/1.0/search/?dataset=evenements-publics-cibul&q=&rows=105&facet=tags&facet=placename&facet=department&facet=region&facet=city&facet=date_start&facet=date_end&facet=pricing_info&facet=updated_at&facet=city_district&refine.tags=exposition&refine.date_end=2022&refine.city=${userCity}`)
 
-  //on ajoute la ville du user comme paramètre dans la requête api pour cibler la ville du user
-  var data = request('GET', `https://public.opendatasoft.com/api/records/1.0/search/?dataset=evenements-publics-cibul&q=&rows=50&facet=tags&facet=placename&facet=department&facet=region&facet=city&facet=date_start&facet=date_end&facet=pricing_info&facet=updated_at&facet=city_district&refine.tags=Exposition&refine.date_end=2022&refine.city=${userCity}`)
-  var dataParse = JSON.parse(data.body)
-  console.log(dataParse.records)
-  console.log(dataParse.length)
-  res.json({ data: dataParse.records })
+  const listExpoBack = dataParse.records.map(el => {
+    return {
+      img: el.fields.image,
+      title: el.fields.title,
+      city: el.fields.city,
+      place: el.fields.placename,
+      address: el.fields.address,
+      date_start: dateFormat(el.fields.date_start),
+      date_end: dateFormat(el.fields.date_end)
+    }
+  })
+  res.json({ listExpoBack })
 })
+
 
 //Daily selection
 
