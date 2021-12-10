@@ -174,6 +174,7 @@ router.post('/sign-up', async function (req, res, next) {
       artworkList: [],
       password: hash,
       token: uid2(32),
+      daily: { day:-1, selection:[]}
     })
 
     saveUser = await newUser.save()
