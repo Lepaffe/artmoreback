@@ -37,7 +37,7 @@ router.post('/add-artworklist', async function (req, res, next) {
   let alreadyAdded = await UserModel.findOne({ token: req.body.token, artworkList: { $in: req.body.artworkId } })
   console.log("already", alreadyAdded)
   if (!alreadyAdded) {
-  var result = await UserModel.updateOne({ token: req.body.token }, { $push: { artworkList: { _id: req.body.artworkId } } })
+    var result = await UserModel.updateOne({ token: req.body.token }, { $push: { artworkList: { _id: req.body.artworkId } } })
   }
   console.log(result)
   res.json({ artwordSaved: true });
@@ -111,12 +111,12 @@ router.post('/add-artistlist', async function (req, res, next) {
   console.log("coucou")
   let alreadyAdded = await UserModel.findOne({ token: req.body.token, artistList: { $in: req.body.artworkId } })
   if (!alreadyAdded) {
-  // update le tableau "artist" dans le model user afin d'ajouter l'object ID d'une oeuvre dans la base de donnée
- var result2= await UserModel.updateOne({token:req.body.token}, {$push:{artistList: {_id:req.body.artistId}}})
-  } 
+    // update le tableau "artist" dans le model user afin d'ajouter l'object ID d'une oeuvre dans la base de donnée
+    var result2 = await UserModel.updateOne({ token: req.body.token }, { $push: { artistList: { _id: req.body.artistId } } })
+  }
   console.log(result2)
- res.json({artistSaved: true});
- });
+  res.json({ artistSaved: true });
+});
 
 router.post('/delete-artistlist', async function (req, res, next) {
 
@@ -133,9 +133,9 @@ router.post('/sign-up', async function (req, res, next) {
   var result = false
   var saveUser = null
   var token = null
-  var artistList= []
-  var artworkList= []
-  
+  var artistList = []
+  var artworkList = []
+
 
   const data = await UserModel.findOne({
     email: req.body.email
@@ -166,6 +166,7 @@ router.post('/sign-up', async function (req, res, next) {
       birthday: Date.parse(req.body.birthday),
       mediums: JSON.parse(req.body.mediums),
       categories: JSON.parse(req.body.categories),
+      img: 'https://media.istockphoto.com/vectors/avatar-icon-design-for-man-vector-id648229964?k=20&m=648229964&s=170667a&w=0&h=Rsy2ka_Mb6xutzNLNgCyWjAHuLw4K8F_JjeTcFOHdfQ=',
       expos: [],
       email: req.body.email,
       artistList: [],
@@ -191,8 +192,8 @@ router.post('/sign-in', async function (req, res, next) {
   var user = null
   var error = []
   var token = null
-  var artistList= []
-  var artworkList= []
+  var artistList = []
+  var artworkList = []
 
   if (req.body.email == ''
     || req.body.password == ''
@@ -210,8 +211,8 @@ router.post('/sign-in', async function (req, res, next) {
       if (bcrypt.compareSync(req.body.password, user.password)) {
         result = true
         token = user.token
-        artistList= user.artistList
-        artworkList= user.artworkList
+        artistList = user.artistList
+        artworkList = user.artworkList
       } else {
         result = false
         error.push('Mot de passe incorrect')
@@ -221,7 +222,7 @@ router.post('/sign-in', async function (req, res, next) {
     }
   }
   console.log(token)
-  res.json({ result, error, token , artistList, artworkList})
+  res.json({ result, error, token, artistList, artworkList })
 })
 
 /* Get xxhibitions list Screen */
@@ -280,5 +281,71 @@ router.get('/get-daily-selection/:token', async function (req, res, next) {
 
   res.json({ artworksWithArtists });
 });
+
+// Profile screen
+
+router.get('/get-username/:token', async function (req, res, next) {
+
+  const user = await UserModel.findOne({ token: req.params.token })
+
+  const firstName = user.firstName;
+  const lastName = user.lastName;
+
+  res.json({ firstName, lastName })
+})
+
+//Settings screen
+router.get('/get-user-info/:token', async function (req, res, next) {
+
+  const user = await UserModel.findOne({ token: req.params.token })
+
+  const city = user.city;
+  const email = user.email
+  const mediums = user.mediums;
+  const categories = user.categories;
+
+  res.json({ city, email, mediums, categories })
+})
+
+router.put('/update-city/:token', async function (req, res, next) {
+
+  await UserModel.updateOne({ token: req.params.token }, { city: req.body.city })
+  const user = await UserModel.findOne({ token: req.params.token });
+  const city = user.city
+
+  res.json({ city })
+})
+
+router.put('/update-email/:token', async function (req, res, next) {
+
+  await UserModel.updateOne({ token: req.params.token }, { email: req.body.email })
+  const user = await UserModel.findOne({ token: req.params.token });
+  const email = user.email
+
+  res.json({ email })
+})
+
+router.put('/update-password/:token', async function (req, res, next) {
+
+  let result = false;
+
+  var hash = bcrypt.hashSync(req.body.password, 10);
+
+  await UserModel.updateOne({ token: req.params.token }, { password: hash })
+  const user = await UserModel.findOne({ token: req.params.token });
+
+  if (user.password) {
+    result = true
+  }
+  res.json({ result })
+})
+
+router.put('/update-categories/:token', async function (req, res, next) {
+
+  await UserModel.updateOne({ token: req.params.token }, { categories: JSON.parse(req.body.categories) })
+  const user = await UserModel.findOne({ token: req.params.token });
+  const categories = user.categories
+  res.json({ categories })
+})
 
 module.exports = router;
