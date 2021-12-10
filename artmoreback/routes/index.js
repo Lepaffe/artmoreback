@@ -22,12 +22,12 @@ router.get('/', function (req, res, next) {
 });
 
 /* Swipe page. */
-router.get('/get-artwork-list', async function (req, res, next) {
-  // lire tout le ArtwordkModel 
-  var artworks = await ArtworkModel.find();
-  Recommend('ijsiBHEwiYfo92Zb2OsS-xqgZgPC5ppr');
+router.get('/get-artwork-list/:token', async function (req, res, next) {
+  // appel de l'algo de selection 
+  var artworkSelections = await Recommend(req.params.token);
+  console.log('result', artworkSelections);
 
-  res.json({ artworks });
+  res.json({ artworks: artworkSelections.swipeArray });
 });
 
 /* Artwork Screen */
@@ -37,7 +37,7 @@ router.post('/add-artworklist', async function (req, res, next) {
   let alreadyAdded = await UserModel.findOne({ token: req.body.token, artworkList: { $in: req.body.artworkId } })
   console.log("already", alreadyAdded)
   if (!alreadyAdded) {
-  var result = await UserModel.updateOne({ token: req.body.token }, { $push: { artworkList: { _id: req.body.artworkId } } })
+    var result = await UserModel.updateOne({ token: req.body.token }, { $push: { artworkList: { _id: req.body.artworkId } } })
   }
   console.log(result)
   res.json({ artwordSaved: true });
@@ -60,6 +60,7 @@ router.get('/get-collection/:token', async function (req, res, next) {
   var collection = await UserModel.findOne({ token: req.params.token }).populate('artworkList')
   res.json({ collection });
 });
+
 /* Collection Artist Screen */
 
 router.get('/get-artist-collection/:token', async function (req, res, next) {
@@ -111,12 +112,12 @@ router.post('/add-artistlist', async function (req, res, next) {
   console.log("coucou")
   let alreadyAdded = await UserModel.findOne({ token: req.body.token, artistList: { $in: req.body.artworkId } })
   if (!alreadyAdded) {
-  // update le tableau "artist" dans le model user afin d'ajouter l'object ID d'une oeuvre dans la base de donnée
- var result2= await UserModel.updateOne({token:req.body.token}, {$push:{artistList: {_id:req.body.artistId}}})
-  } 
+    // update le tableau "artist" dans le model user afin d'ajouter l'object ID d'une oeuvre dans la base de donnée
+    var result2 = await UserModel.updateOne({ token: req.body.token }, { $push: { artistList: { _id: req.body.artistId } } })
+  }
   console.log(result2)
- res.json({artistSaved: true});
- });
+  res.json({ artistSaved: true });
+});
 
 router.post('/delete-artistlist', async function (req, res, next) {
 
@@ -133,9 +134,9 @@ router.post('/sign-up', async function (req, res, next) {
   var result = false
   var saveUser = null
   var token = null
-  var artistList= []
-  var artworkList= []
-  
+  var artistList = []
+  var artworkList = []
+
 
   const data = await UserModel.findOne({
     email: req.body.email
@@ -166,6 +167,7 @@ router.post('/sign-up', async function (req, res, next) {
       birthday: Date.parse(req.body.birthday),
       mediums: JSON.parse(req.body.mediums),
       categories: JSON.parse(req.body.categories),
+      img: 'https://media.istockphoto.com/vectors/avatar-icon-design-for-man-vector-id648229964?k=20&m=648229964&s=170667a&w=0&h=Rsy2ka_Mb6xutzNLNgCyWjAHuLw4K8F_JjeTcFOHdfQ=',
       expos: [],
       email: req.body.email,
       artistList: [],
@@ -186,13 +188,13 @@ router.post('/sign-up', async function (req, res, next) {
 })
 
 router.post('/sign-in', async function (req, res, next) {
-  
+
   var result = false
   var user = null
   var error = []
   var token = null
-  var artistList= []
-  var artworkList= []
+  var artistList = []
+  var artworkList = []
 
   if (req.body.email == ''
     || req.body.password == ''
@@ -210,8 +212,8 @@ router.post('/sign-in', async function (req, res, next) {
       if (bcrypt.compareSync(req.body.password, user.password)) {
         result = true
         token = user.token
-        artistList= user.artistList
-        artworkList= user.artworkList
+        artistList = user.artistList
+        artworkList = user.artworkList
       } else {
         result = false
         error.push('Mot de passe incorrect')
@@ -221,23 +223,77 @@ router.post('/sign-in', async function (req, res, next) {
     }
   }
   console.log(token)
-  res.json({ result, error, token , artistList, artworkList})
+  res.json({ result, error, token, artistList, artworkList })
 })
 
-/* Get xxhibitions list Screen */
+// router.get('/get-exhibitions', async function (req, res, next) {
+//   //on récupère la ville du user
+//   const user = await UserModel.findOne({ token: req.params.token })
+//   //on ajoute la ville du user comme paramètre dans la requête api pour cibler la ville du user
+//   var data = request('GET', `https://public.opendatasoft.com/api/records/1.0/search/?dataset=evenements-publics-cibul&q=&rows=50&facet=tags&facet=placename&facet=department&facet=region&facet=city&facet=date_start&facet=date_end&facet=pricing_info&facet=updated_at&facet=city_district&refine.tags=Exposition&refine.date_end=2022&refine.city=${userCity}`)
+//   var dataParse = JSON.parse(data.body)
+//   console.log(dataParse.records)
+//   console.log(dataParse.length)
+//   res.json({ data: dataParse.records })
+// })
+
+/* Get exhibitions list Screen */
+
+router.get('/get-exhibitions', async function (req, res, next) {
+
+  // fonction pour reformater la date
+  var dateFormat = function (date) {
+    var newDate = new Date(date)
+    var format = (newDate.getMonth() + 1) + "." + newDate.getDate() + "." + newDate.getFullYear()
+    return format;
+  };
+
+  // on récupère toutes les expositions
+  var data = request('GET', `https://public.opendatasoft.com/api/records/1.0/search/?dataset=evenements-publics-cibul&q=&rows=105&facet=tags&facet=placename&facet=department&facet=region&facet=city&facet=date_start&facet=date_end&facet=pricing_info&facet=updated_at&facet=city_district&refine.tags=exposition&refine.date_end=2022`)
+  var dataParse = JSON.parse(data.body)
+
+  // on map pour récupérer que les infos nécessaires
+  const listExpoBack = dataParse.records.map(el => {
+    return {
+      img: el.fields.image,
+      title: el.fields.title,
+      city: el.fields.city,
+      place: el.fields.placename,
+      address: el.fields.address,
+      date_start: dateFormat(el.fields.date_start),
+      date_end: dateFormat(el.fields.date_end)
+    } 
+  })
+  res.json({ listExpoBack })
+  console.log("nouvelle liste expo:" ,listExpoBack)
+})
+
 
 router.get('/get-exhibitions/:token', async function (req, res, next) {
+
+  var dateFormat = function (date) {
+    var newDate = new Date(date)
+    var format = (newDate.getMonth() + 1) + "." + newDate.getDate() + "." + newDate.getFullYear()
+    return format;
+  };
   //on récupère la ville du user
   const user = await UserModel.findOne({ token: req.params.token })
   const userCity = user.city;
   console.log(userCity)
+  var data = request('GET', `https://public.opendatasoft.com/api/records/1.0/search/?dataset=evenements-publics-cibul&q=&rows=105&facet=tags&facet=placename&facet=department&facet=region&facet=city&facet=date_start&facet=date_end&facet=pricing_info&facet=updated_at&facet=city_district&refine.tags=exposition&refine.date_end=2022&refine.city=${userCity}`)
 
-  //on ajoute la ville du user comme paramètre dans la requête api pour cibler la ville du user
-  var data = request('GET', `https://public.opendatasoft.com/api/records/1.0/search/?dataset=evenements-publics-cibul&q=&rows=50&facet=tags&facet=placename&facet=department&facet=region&facet=city&facet=date_start&facet=date_end&facet=pricing_info&facet=updated_at&facet=city_district&refine.tags=Exposition&refine.date_end=2022&refine.city=${userCity}`)
-  var dataParse = JSON.parse(data.body)
-  console.log(dataParse.records)
-  console.log(dataParse.length)
-  res.json({ data: dataParse.records })
+  const listExpoBack = dataParse.records.map(el => {
+    return {
+      img: el.fields.image,
+      title: el.fields.title,
+      city: el.fields.city,
+      place: el.fields.placename,
+      address: el.fields.address,
+      date_start: dateFormat(el.fields.date_start),
+      date_end: dateFormat(el.fields.date_end)
+    }
+  })
+  res.json({ listExpoBack })
 })
 
 
@@ -245,41 +301,110 @@ router.get('/get-exhibitions/:token', async function (req, res, next) {
 
 router.get('/get-daily-selection/:token', async function (req, res, next) {
 
-  const user = await UserModel.findOne({ token: req.params.token })
+  // appel de l'algo de selection 
+  var artworkSelections = await Recommend(req.params.token);
+
+  //const user = await UserModel.findOne({ token: req.params.token })
 
   //on récupère les mouvements favoris de l'user
-  const userCategories = user.categories;
+  //const userCategories = user.categories;
 
   //on récupère toutes les oeuvres qui possèdent un des mouvements pref de l'user (par exemple toutes les oeuvres Abstract)
-  let artworks = await ArtworkModel.find({ category: userCategories[0] })
+  //let artworks = await ArtworkModel.find({ category: userCategories[0] })
 
   //on modifie l'ordre des éléments dans le tableau artworks pour avoir des artists différents
-  const shuffleArray = array => {
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      const temp = array[i];
-      array[i] = array[j];
-      array[j] = temp;
-    }
-    return array;
-  }
+  // const shuffleArray = array => {
+  //   for (let i = array.length - 1; i > 0; i--) {
+  //     const j = Math.floor(Math.random() * (i + 1));
+  //     const temp = array[i];
+  //     array[i] = array[j];
+  //     array[j] = temp;
+  //   }
+  //   return array;
+  // }
 
-  artworks = shuffleArray(artworks)
+  //artworks = shuffleArray(artworks)
 
   //on n'en prend que 4 (à essayer avec un user qui a seulement Abstract dans ses mouvements pref pour le moment)
-  artworks.splice(4)
+  //artworks.splice(4)
 
   //pour chaque oeuvre de notre tableau, on récupère l'artiste (j'ai fait sans map() pour le moment histoire de bien comprendre)
-  const artist0 = await ArtistModel.findOne({ artistArtwork: { $in: artworks[0]._id } }).populate('artistArtwork')
-  const artist1 = await ArtistModel.findOne({ artistArtwork: { $in: artworks[1]._id } }).populate('artistArtwork')
-  const artist2 = await ArtistModel.findOne({ artistArtwork: { $in: artworks[2]._id } }).populate('artistArtwork')
-  const artist3 = await ArtistModel.findOne({ artistArtwork: { $in: artworks[3]._id } }).populate('artistArtwork')
+  const artist0 = await ArtistModel.findOne({ artistArtwork: { $in: artworkSelections.dailyArray[0]._id } }).populate('artistArtwork')
+  const artist1 = await ArtistModel.findOne({ artistArtwork: { $in: artworkSelections.dailyArray[1]._id } }).populate('artistArtwork')
+  const artist2 = await ArtistModel.findOne({ artistArtwork: { $in: artworkSelections.dailyArray[2]._id } }).populate('artistArtwork')
+  const artist3 = await ArtistModel.findOne({ artistArtwork: { $in: artworkSelections.dailyArray[3]._id } }).populate('artistArtwork')
 
   //on créé le tableau qui sera renvoyé au front, où chaque élément est un objet qui contient l'oeuvre avec l'artiste qui lui correspond
-  const artworksWithArtists = [{ artwork: artworks[0], artist: artist0 }, { artwork: artworks[1], artist: artist1 },
-  { artwork: artworks[2], artist: artist2 }, { artwork: artworks[3], artist: artist3 }]
+  const artworksWithArtists = [{ artwork: artworkSelections.dailyArray[0], artist: artist0 }, { artwork: artworkSelections.dailyArray[1], artist: artist1 },
+  { artwork: artworkSelections.dailyArray[2], artist: artist2 }, { artwork: artworkSelections.dailyArray[3], artist: artist3 }]
 
   res.json({ artworksWithArtists });
 });
+
+// Profile screen
+
+router.get('/get-username/:token', async function (req, res, next) {
+
+  const user = await UserModel.findOne({ token: req.params.token })
+
+  const firstName = user.firstName;
+  const lastName = user.lastName;
+
+  res.json({ firstName, lastName })
+})
+
+//Settings screen
+router.get('/get-user-info/:token', async function (req, res, next) {
+
+  const user = await UserModel.findOne({ token: req.params.token })
+
+  const city = user.city;
+  const email = user.email
+  const mediums = user.mediums;
+  const categories = user.categories;
+
+  res.json({ city, email, mediums, categories })
+})
+
+router.put('/update-city/:token', async function (req, res, next) {
+
+  await UserModel.updateOne({ token: req.params.token }, { city: req.body.city })
+  const user = await UserModel.findOne({ token: req.params.token });
+  const city = user.city
+
+  res.json({ city })
+})
+
+router.put('/update-email/:token', async function (req, res, next) {
+
+  await UserModel.updateOne({ token: req.params.token }, { email: req.body.email })
+  const user = await UserModel.findOne({ token: req.params.token });
+  const email = user.email
+
+  res.json({ email })
+})
+
+router.put('/update-password/:token', async function (req, res, next) {
+
+  let result = false;
+
+  var hash = bcrypt.hashSync(req.body.password, 10);
+
+  await UserModel.updateOne({ token: req.params.token }, { password: hash })
+  const user = await UserModel.findOne({ token: req.params.token });
+
+  if (user.password) {
+    result = true
+  }
+  res.json({ result })
+})
+
+router.put('/update-categories/:token', async function (req, res, next) {
+
+  await UserModel.updateOne({ token: req.params.token }, { categories: JSON.parse(req.body.categories) })
+  const user = await UserModel.findOne({ token: req.params.token });
+  const categories = user.categories
+  res.json({ categories })
+})
 
 module.exports = router;
