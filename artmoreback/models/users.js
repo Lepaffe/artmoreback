@@ -1,4 +1,9 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
+
+const dailySchema = mongoose.Schema({
+    day: Number, 
+    selection:[]
+})
 
 const userSchema = mongoose.Schema({
     firstName: String,
@@ -12,6 +17,7 @@ const userSchema = mongoose.Schema({
     mediums: [],
     categories: [],
     expos: [{ type: mongoose.Schema.Types.ObjectId, ref: 'expos' }],
+    daily: dailySchema,
     artistList: [{ type: mongoose.Schema.Types.ObjectId, ref: 'artists' }],
     artworkList: [{ type: mongoose.Schema.Types.ObjectId, ref: 'artworks' }],
     artworkLiked: [{ type: mongoose.Schema.Types.ObjectId, ref: 'artworks' }],
