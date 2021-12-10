@@ -8,6 +8,17 @@ var UserModel = require('../models/users')
 
 const Recommend = async (token) => {
     
+    // fonction Shuffle pour avoir une selection random sur le tableau
+    const shuffleArray = array => {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          const temp = array[i];
+          array[i] = array[j];
+          array[j] = temp;
+        }
+        return array;
+      }
+
     var artworks = await ArtworkModel.find(); // on recupere toutes les oeuvres
     var user= await UserModel.findOne({token: token})
           .populate('artworkList')
@@ -64,7 +75,23 @@ const Recommend = async (token) => {
     console.log('set1', artworksFavMediumsFavCat, artworksFavMediumsFavCat.length);
     console.log('set2',artworksFavMediumsAltCat, artworksFavMediumsAltCat.length );
     console.log('set3',artworksAltMediumsFavCat, artworksAltMediumsFavCat.length);
-   
+    // On mélange les oeuvres aléatoirement de chaque tableau 
+    artworksFavMediumsFavCat=shuffleArray(artworksFavMediumsFavCat);
+    artworksFavMediumsAltCat=shuffleArray(artworksFavMediumsAltCat);
+    artworksAltMediumsFavCat=shuffleArray(artworksAltMediumsFavCat);
+    //On prend 70% du set 1, 20% du set 2 et 10% du set 3
+    let total100= artworksFavMediumsFavCat.length+artworksFavMediumsAltCat.length+artworksAltMediumsFavCat.length;
+    let nbSet1= Math.round(total100*0.7);
+    let nbSet2=Math.round(total100*0.2);
+    let nbSet3=Math.round(total100*0.1);
+    console.log('nbSet',total100,nbSet1, nbSet2, nbSet3);
+    let dailyArray=artworksFavMediumsFavCat.slice(0,4);
+    let swipeArray=artworksFavMediumsFavCat.slice(4,4+nbSet1)
+                   .concat(artworksFavMediumsAltCat.slice(0,nbSet2))
+                   .concat(artworksAltMediumsFavCat.slice(0,nbSet3));
+    swipeArray=shuffleArray(swipeArray);
+    console.log('daily', dailyArray);
+    return {swipeArray,dailyArray}
  }   
 }
 module.exports = Recommend

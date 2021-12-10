@@ -22,12 +22,12 @@ router.get('/', function (req, res, next) {
 });
 
 /* Swipe page. */
-router.get('/get-artwork-list', async function (req, res, next) {
-  // lire tout le ArtwordkModel 
-  var artworks = await ArtworkModel.find();
-  Recommend('ijsiBHEwiYfo92Zb2OsS-xqgZgPC5ppr');
+router.get('/get-artwork-list/:token', async function (req, res, next) {
+  // appel de l'algo de selection 
+  var artworkSelections= await Recommend(req.params.token);
+  console.log('result',artworkSelections);
 
-  res.json({ artworks });
+  res.json({ artworks:artworkSelections.swipeArray});
 });
 
 /* Artwork Screen */
@@ -60,6 +60,7 @@ router.get('/get-collection/:token', async function (req, res, next) {
   var collection = await UserModel.findOne({ token: req.params.token }).populate('artworkList')
   res.json({ collection });
 });
+
 /* Collection Artist Screen */
 
 router.get('/get-artist-collection/:token', async function (req, res, next) {
@@ -245,40 +246,43 @@ router.get('/get-exhibitions/:token', async function (req, res, next) {
 
 router.get('/get-daily-selection/:token', async function (req, res, next) {
 
-  const user = await UserModel.findOne({ token: req.params.token })
+  // appel de l'algo de selection 
+  var artworkSelections= await Recommend(req.params.token);
+  
+  //const user = await UserModel.findOne({ token: req.params.token })
 
   //on récupère les mouvements favoris de l'user
-  const userCategories = user.categories;
+  //const userCategories = user.categories;
 
   //on récupère toutes les oeuvres qui possèdent un des mouvements pref de l'user (par exemple toutes les oeuvres Abstract)
-  let artworks = await ArtworkModel.find({ category: userCategories[0] })
+  //let artworks = await ArtworkModel.find({ category: userCategories[0] })
 
   //on modifie l'ordre des éléments dans le tableau artworks pour avoir des artists différents
-  const shuffleArray = array => {
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      const temp = array[i];
-      array[i] = array[j];
-      array[j] = temp;
-    }
-    return array;
-  }
+  // const shuffleArray = array => {
+  //   for (let i = array.length - 1; i > 0; i--) {
+  //     const j = Math.floor(Math.random() * (i + 1));
+  //     const temp = array[i];
+  //     array[i] = array[j];
+  //     array[j] = temp;
+  //   }
+  //   return array;
+  // }
 
-  artworks = shuffleArray(artworks)
+  //artworks = shuffleArray(artworks)
 
   //on n'en prend que 4 (à essayer avec un user qui a seulement Abstract dans ses mouvements pref pour le moment)
-  artworks.splice(4)
+  //artworks.splice(4)
 
   //pour chaque oeuvre de notre tableau, on récupère l'artiste (j'ai fait sans map() pour le moment histoire de bien comprendre)
-  const artist0 = await ArtistModel.findOne({ artistArtwork: { $in: artworks[0]._id } }).populate('artistArtwork')
-  const artist1 = await ArtistModel.findOne({ artistArtwork: { $in: artworks[1]._id } }).populate('artistArtwork')
-  const artist2 = await ArtistModel.findOne({ artistArtwork: { $in: artworks[2]._id } }).populate('artistArtwork')
-  const artist3 = await ArtistModel.findOne({ artistArtwork: { $in: artworks[3]._id } }).populate('artistArtwork')
+  const artist0 = await ArtistModel.findOne({ artistArtwork: { $in: artworkSelections.dailyArray[0]._id } }).populate('artistArtwork')
+  const artist1 = await ArtistModel.findOne({ artistArtwork: { $in: artworkSelections.dailyArray[1]._id } }).populate('artistArtwork')
+  const artist2 = await ArtistModel.findOne({ artistArtwork: { $in: artworkSelections.dailyArray[2]._id } }).populate('artistArtwork')
+  const artist3 = await ArtistModel.findOne({ artistArtwork: { $in: artworkSelections.dailyArray[3]._id } }).populate('artistArtwork')
 
   //on créé le tableau qui sera renvoyé au front, où chaque élément est un objet qui contient l'oeuvre avec l'artiste qui lui correspond
-  const artworksWithArtists = [{ artwork: artworks[0], artist: artist0 }, { artwork: artworks[1], artist: artist1 },
-  { artwork: artworks[2], artist: artist2 }, { artwork: artworks[3], artist: artist3 }]
-
+  const artworksWithArtists = [{ artwork: artworkSelections.dailyArray[0], artist: artist0 }, { artwork: artworkSelections.dailyArray[1], artist: artist1 },
+  { artwork: artworkSelections.dailyArray[2], artist: artist2 }, { artwork: artworkSelections.dailyArray[3], artist: artist3 }]
+ 
   res.json({ artworksWithArtists });
 });
 
