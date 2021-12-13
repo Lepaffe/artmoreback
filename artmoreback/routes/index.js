@@ -193,7 +193,7 @@ router.post('/sign-up', async function (req, res, next) {
       artworkList: [],
       password: hash,
       token: uid2(32),
-      daily: { day:-1, selection:[]}
+      daily: { day: -1, selection: [] }
     })
 
     saveUser = await newUser.save()
@@ -246,20 +246,18 @@ router.post('/sign-in', async function (req, res, next) {
   res.json({ result, error, token, artistList, artworkList })
 })
 
-// router.get('/get-exhibitions', async function (req, res, next) {
-//   //on récupère la ville du user
-//   const user = await UserModel.findOne({ token: req.params.token })
-//   //on ajoute la ville du user comme paramètre dans la requête api pour cibler la ville du user
-//   var data = request('GET', `https://public.opendatasoft.com/api/records/1.0/search/?dataset=evenements-publics-cibul&q=&rows=50&facet=tags&facet=placename&facet=department&facet=region&facet=city&facet=date_start&facet=date_end&facet=pricing_info&facet=updated_at&facet=city_district&refine.tags=Exposition&refine.date_end=2022&refine.city=${userCity}`)
-//   var dataParse = JSON.parse(data.body)
-//   console.log(dataParse.records)
-//   console.log(dataParse.length)
-//   res.json({ data: dataParse.records })
-// })
-
 /* Get exhibitions list Screen */
 
-router.get('/get-exhibitions', async function (req, res, next) {
+router.get('/get-exhibitions/:token', async function (req, res, next) {
+
+  //on récupère le token pour filtrer par la suite les résultats selon la ville du user
+  let user = await UserModel.findOne({ token: req.params.token })
+  const userCity = user.city
+  console.log(userCity)
+
+  // on récupère toutes les expositions
+  var data = request('GET', `https://public.opendatasoft.com/api/records/1.0/search/?dataset=evenements-publics-cibul&q=&rows=105&facet=tags&facet=placename&facet=department&facet=region&facet=city&facet=date_start&facet=date_end&facet=pricing_info&facet=updated_at&facet=city_district&refine.tags=exposition&refine.date_end=2022`)
+  var dataParse = JSON.parse(data.body)
 
   // fonction pour reformater la date
   var dateFormat = function (date) {
@@ -267,10 +265,6 @@ router.get('/get-exhibitions', async function (req, res, next) {
     var format = (newDate.getMonth() + 1) + "." + newDate.getDate() + "." + newDate.getFullYear()
     return format;
   };
-
-  // on récupère toutes les expositions
-  var data = request('GET', `https://public.opendatasoft.com/api/records/1.0/search/?dataset=evenements-publics-cibul&q=&rows=105&facet=tags&facet=placename&facet=department&facet=region&facet=city&facet=date_start&facet=date_end&facet=pricing_info&facet=updated_at&facet=city_district&refine.tags=exposition&refine.date_end=2022`)
-  var dataParse = JSON.parse(data.body)
 
   // on map pour récupérer que les infos nécessaires
   const listExpoBack = dataParse.records.map(el => {
@@ -282,39 +276,36 @@ router.get('/get-exhibitions', async function (req, res, next) {
       address: el.fields.address,
       date_start: dateFormat(el.fields.date_start),
       date_end: dateFormat(el.fields.date_end)
-    } 
-  })
-  res.json({ listExpoBack })
-  console.log("nouvelle liste expo:" ,listExpoBack)
-})
-
-
-router.get('/get-exhibitions/:token', async function (req, res, next) {
-
-  var dateFormat = function (date) {
-    var newDate = new Date(date)
-    var format = (newDate.getMonth() + 1) + "." + newDate.getDate() + "." + newDate.getFullYear()
-    return format;
-  };
-  //on récupère la ville du user
-  const user = await UserModel.findOne({ token: req.params.token })
-  const userCity = user.city;
-  console.log(userCity)
-  var data = request('GET', `https://public.opendatasoft.com/api/records/1.0/search/?dataset=evenements-publics-cibul&q=&rows=105&facet=tags&facet=placename&facet=department&facet=region&facet=city&facet=date_start&facet=date_end&facet=pricing_info&facet=updated_at&facet=city_district&refine.tags=exposition&refine.date_end=2022&refine.city=${userCity}`)
-
-  const listExpoBack = dataParse.records.map(el => {
-    return {
-      img: el.fields.image,
-      title: el.fields.title,
-      city: el.fields.city,
-      place: el.fields.placename,
-      address: el.fields.address,
-      date_start: dateFormat(el.fields.date_start),
-      date_end: dateFormat(el.fields.date_end)
     }
   })
-  res.json({ listExpoBack })
+  res.json({ listExpoBack, userCity })
 })
+
+router.post('/add-exhibitions', async function (req, res, next) {
+
+  let alreadyAdded = await UserModel.findOne({ token: req.body.token, expos: { _id: req.body._id } })
+  if (!alreadyAdded) {
+    // update le tableau "expo" dans le model user afin d'ajouter l'expo dans la base de donnée
+    var result2 = await UserModel.updateOne({ token: req.body.token }, { $push: { expos: { title: req.body.title, place: req.body.place, address : req.body.address, date_start : req.body.date_start, date_end : req.body.date_end} } })
+  }
+  console.log(result2)
+  res.json({ expoSaved: true });
+});
+
+router.delete('/delete-exhibitions', async function (req, res, next) {
+
+  // supprime un element de l'array expoList du ModelUser dans la base de donnée
+  var result3 = await UserModel.updateOne({ token: req.body.token }, { $pull: { expos: { title: req.body.title } } })
+  console.log(result3)
+  res.json({ expoDeleted: true });
+});
+
+router.get('/get-my-exhibitions/:token', async function (req, res, next) {
+  // Récuperer la clé étrangère artistList du UserModel en filtrant avec son token
+  var user = await UserModel.findOne({ token: req.params.token })
+  var userExpoList = user.expos
+  res.json({ userExpoList });
+});
 
 
 //Daily selection
@@ -426,6 +417,14 @@ router.put('/update-categories/:token', async function (req, res, next) {
   const user = await UserModel.findOne({ token: req.params.token });
   const categories = user.categories
   res.json({ categories })
+})
+
+router.put('/update-mediums/:token', async function (req, res, next) {
+
+  await UserModel.updateOne({ token: req.params.token }, { mediums: JSON.parse(req.body.mediums) })
+  const user = await UserModel.findOne({ token: req.params.token });
+  const mediums = user.mediums
+  res.json({ mediums })
 })
 
 router.post('/update-avatar/:token', async function (req, res, next) {
