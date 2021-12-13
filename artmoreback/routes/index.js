@@ -410,6 +410,14 @@ router.put('/update-categories/:token', async function (req, res, next) {
   res.json({ categories })
 })
 
+router.put('/update-mediums/:token', async function (req, res, next) {
+
+  await UserModel.updateOne({ token: req.params.token }, { mediums: JSON.parse(req.body.mediums) })
+  const user = await UserModel.findOne({ token: req.params.token });
+  const mediums = user.mediums
+  res.json({ mediums })
+})
+
 router.post('/update-avatar/:token', async function (req, res, next) {
 
   var pictureName = './tmp/' + uniqid() + '.jpg';
