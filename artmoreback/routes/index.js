@@ -75,7 +75,16 @@ router.get('/get-collection/:token', async function (req, res, next) {
 
 router.get('/get-artist-collection/:token', async function (req, res, next) {
   // Récuperer la clé étrangère artistList du UserModel en filtrant avec son token
-  var artistCollection = await UserModel.findOne({ token: req.params.token }).populate('artistList')
+  var artistCollection = await UserModel.findOne({ token: req.params.token })
+                               .populate({
+                                 path: 'artistList',      //on populate dans userModel la artisList
+                                 populate : {             // on lui dit de faire un deuxieme populate avec le path ArtistAtwork 
+                                   path:'artistArtwork'   // permet de faire un "populate de populate"
+                                 }
+                                 })
+                               .exec();
+                    
+  console.log('artistCollection',artistCollection.artistList[0])                            
   res.json({ artistCollection });
 });
 
@@ -168,13 +177,13 @@ router.post('/sign-up', async function (req, res, next) {
   }
 
   if (error.length == 0) {
-
+   //console.log('birthday', new Date(req.body.birthday));
     var hash = bcrypt.hashSync(req.body.password, 10);
     var newUser = new UserModel({
       firstName: req.body.firstName,
       lastName: req.body.lastName,
       city: req.body.city,
-      birthday: Date.parse(req.body.birthday),
+      birthday: req.body.birthday, 
       mediums: JSON.parse(req.body.mediums),
       categories: JSON.parse(req.body.categories),
       img: 'https://media.istockphoto.com/vectors/avatar-icon-design-for-man-vector-id648229964?k=20&m=648229964&s=170667a&w=0&h=Rsy2ka_Mb6xutzNLNgCyWjAHuLw4K8F_JjeTcFOHdfQ=',
@@ -428,7 +437,7 @@ router.post('/update-avatar/:token', async function (req, res, next) {
     var resultCloudinary = await cloudinary.uploader.upload(pictureName);
     await UserModel.updateOne({ token: req.params.token }, { img: resultCloudinary.url })
   }
-
+  console.log(resultCloudinary.url);
   fs.unlinkSync(pictureName);
 
   const user = await UserModel.findOne({ token: req.params.token });

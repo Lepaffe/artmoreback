@@ -72,9 +72,9 @@ const Recommend = async (token) => {
             artworksFavMediumsAltCat = artworksFavMediumsAltCat.filter(e => e.category !== user.categories[i]);
         }
 
-        console.log('set1', artworksFavMediumsFavCat, artworksFavMediumsFavCat.length);
-        console.log('set2', artworksFavMediumsAltCat, artworksFavMediumsAltCat.length);
-        console.log('set3', artworksAltMediumsFavCat, artworksAltMediumsFavCat.length);
+        //console.log('set1', artworksFavMediumsFavCat, artworksFavMediumsFavCat.length);
+        //console.log('set2', artworksFavMediumsAltCat, artworksFavMediumsAltCat.length);
+        //console.log('set3', artworksAltMediumsFavCat, artworksAltMediumsFavCat.length);
 
     // On mélange les oeuvres aléatoirement de chaque tableau 
 
@@ -93,7 +93,7 @@ const Recommend = async (token) => {
     var dailyArray=[];
     let today=new Date();
     today=today.getDay();
-    console.log('user today',user);
+    //console.log('user today',user);
     if (user.daily.day != undefined && today===user.daily.day){
         //si même journée on garde la même selection
         dailyArray= user.daily.selection;
@@ -120,7 +120,7 @@ const Recommend = async (token) => {
     swipeArray=shuffleArray(swipeArray);
    
    
-    console.log('daily', dailyArray);
+    //console.log('daily', dailyArray);
     return {swipeArray,dailyArray}
  }   
 }
