@@ -1,16 +1,18 @@
 const mongoose = require('mongoose');
 
 const dailySchema = mongoose.Schema({
-    day: Number, 
-    selection:[]
+    day: Number,
+    selection: []
 })
 
 const expoSchema = mongoose.Schema({
-    title: String, 
+    title: String,
     place: String,
     address: String,
     date_start: String,
-    date_end: String
+    date_end: String,
+    img: String,
+    city: String
 })
 
 const userSchema = mongoose.Schema({
