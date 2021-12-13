@@ -218,7 +218,6 @@ router.post('/sign-in', async function (req, res, next) {
       email: req.body.email,
     })
 
-
     if (user) {
       if (bcrypt.compareSync(req.body.password, user.password)) {
         result = true
@@ -236,6 +235,27 @@ router.post('/sign-in', async function (req, res, next) {
   console.log(token)
   res.json({ result, error, token, artistList, artworkList })
 })
+
+/* Landing Screen - auto-logged in */
+
+router.get('/auto-loggedIn/:token', async function (req, res, next) {
+
+  var token = null
+  var artistList = []
+  var artworkList = []
+  var result= false
+  
+  const user = await UserModel.findOne({ token: req.params.token })
+  
+  if (user){
+  token = user.token
+  artistList = user.artistList
+  artworkList = user.artworkList
+  result=true
+  }
+  res.json({ result, token, artistList, artworkList })
+})
+
 
 /* Get exhibitions list Screen */
 
