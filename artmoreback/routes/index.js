@@ -258,7 +258,7 @@ router.get('/get-exhibitions/:token', async function (req, res, next) {
   };
 
   // on map pour récupérer que les infos nécessaires
-  const listExpoBack = dataParse.records.map(el => {
+  let listExpoBack = dataParse.records.map(el => {
     return {
       img: el.fields.image,
       title: el.fields.title,
@@ -269,26 +269,37 @@ router.get('/get-exhibitions/:token', async function (req, res, next) {
       date_end: dateFormat(el.fields.date_end)
     }
   })
+
   res.json({ listExpoBack, userCity })
 })
 
-router.post('/add-exhibitions', async function (req, res, next) {
+router.post('/add-exhibitions/:token', async function (req, res, next) {
 
-  let alreadyAdded = await UserModel.findOne({ token: req.body.token, expos: { _id: req.body._id } })
-  if (!alreadyAdded) {
-    // update le tableau "expo" dans le model user afin d'ajouter l'expo dans la base de donnée
-    var result2 = await UserModel.updateOne({ token: req.body.token }, { $push: { expos: { title: req.body.title, place: req.body.place, address : req.body.address, date_start : req.body.date_start, date_end : req.body.date_end} } })
-  }
-  console.log(result2)
-  res.json({ expoSaved: true });
+  let result = false;
+
+  result = await UserModel.updateOne({ token: req.body.token }, { $push: { expos: { title: req.body.title, place: req.body.place, address: req.body.address, date_start: req.body.date_start, date_end: req.body.date_end, city: req.body.city, img: req.body.img } } })
+
+  if (result.modifiedCount != 0) {
+    result = true
+  };
+
+  const user = await UserModel.findOne({ token: req.body.token })
+  const addedExpo = user.expos[user.expos.length - 1]
+
+  res.json({ result, addedExpo });
 });
 
-router.delete('/delete-exhibitions', async function (req, res, next) {
+router.delete('/delete-exhibitions/:token/:title', async function (req, res, next) {
 
-  // supprime un element de l'array expoList du ModelUser dans la base de donnée
-  var result3 = await UserModel.updateOne({ token: req.body.token }, { $pull: { expos: { title: req.body.title } } })
-  console.log(result3)
-  res.json({ expoDeleted: true });
+  let result = false;
+
+  result = await UserModel.updateOne({ token: req.params.token }, { $pull: { expos: { title: req.params.title } } })
+
+  if (result.modifiedCount != 0) {
+    result = true
+  };
+
+  res.json({ result });
 });
 
 router.get('/get-my-exhibitions/:token', async function (req, res, next) {
