@@ -5,6 +5,14 @@ const dailySchema = mongoose.Schema({
     selection:[]
 })
 
+const expoSchema = mongoose.Schema({
+    title: String, 
+    place: String,
+    address: String,
+    date_start: String,
+    date_end: String
+})
+
 const userSchema = mongoose.Schema({
     firstName: String,
     lastName: String,
@@ -16,7 +24,7 @@ const userSchema = mongoose.Schema({
     img: String,
     mediums: [],
     categories: [],
-    expos: [{ type: mongoose.Schema.Types.ObjectId, ref: 'expos' }],
+    expos: [expoSchema],
     daily: dailySchema,
     artistList: [{ type: mongoose.Schema.Types.ObjectId, ref: 'artists' }],
     artworkList: [{ type: mongoose.Schema.Types.ObjectId, ref: 'artworks' }],
