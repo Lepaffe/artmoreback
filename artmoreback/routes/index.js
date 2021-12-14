@@ -76,15 +76,15 @@ router.get('/get-collection/:token', async function (req, res, next) {
 router.get('/get-artist-collection/:token', async function (req, res, next) {
   // Récuperer la clé étrangère artistList du UserModel en filtrant avec son token
   var artistCollection = await UserModel.findOne({ token: req.params.token })
-                               .populate({
-                                 path: 'artistList',      //on populate dans userModel la artisList
-                                 populate : {             // on lui dit de faire un deuxieme populate avec le path ArtistAtwork 
-                                   path:'artistArtwork'   // permet de faire un "populate de populate"
-                                 }
-                                 })
-                               .exec();
-                    
-  console.log('artistCollection',artistCollection.artistList[0])                            
+    .populate({
+      path: 'artistList',      //on populate dans userModel la artisList
+      populate: {             // on lui dit de faire un deuxieme populate avec le path ArtistAtwork 
+        path: 'artistArtwork'   // permet de faire un "populate de populate"
+      }
+    })
+    .exec();
+
+  console.log('artistCollection', artistCollection.artistList[0])
   res.json({ artistCollection });
 });
 
@@ -177,13 +177,13 @@ router.post('/sign-up', async function (req, res, next) {
   }
 
   if (error.length == 0) {
-   //console.log('birthday', new Date(req.body.birthday));
+    //console.log('birthday', new Date(req.body.birthday));
     var hash = bcrypt.hashSync(req.body.password, 10);
     var newUser = new UserModel({
       firstName: req.body.firstName,
       lastName: req.body.lastName,
       city: req.body.city,
-      birthday: req.body.birthday, 
+      birthday: req.body.birthday,
       mediums: JSON.parse(req.body.mediums),
       categories: JSON.parse(req.body.categories),
       img: 'https://media.istockphoto.com/vectors/avatar-icon-design-for-man-vector-id648229964?k=20&m=648229964&s=170667a&w=0&h=Rsy2ka_Mb6xutzNLNgCyWjAHuLw4K8F_JjeTcFOHdfQ=',
@@ -252,15 +252,15 @@ router.get('/auto-loggedIn/:token', async function (req, res, next) {
   var token = null
   var artistList = []
   var artworkList = []
-  var result= false
-  
+  var result = false
+
   const user = await UserModel.findOne({ token: req.params.token })
-  
-  if (user){
-  token = user.token
-  artistList = user.artistList
-  artworkList = user.artworkList
-  result=true
+
+  if (user) {
+    token = user.token
+    artistList = user.artistList
+    artworkList = user.artworkList
+    result = true
   }
   res.json({ result, token, artistList, artworkList })
 })
@@ -396,6 +396,7 @@ router.get('/get-username/:token', async function (req, res, next) {
   res.json({ firstName, lastName, img })
 })
 
+
 //Settings screen
 router.get('/get-user-info/:token', async function (req, res, next) {
 
@@ -467,7 +468,7 @@ router.post('/update-avatar/:token', async function (req, res, next) {
     var resultCloudinary = await cloudinary.uploader.upload(pictureName);
     await UserModel.updateOne({ token: req.params.token }, { img: resultCloudinary.url })
   }
-  console.log(resultCloudinary.url);
+
   fs.unlinkSync(pictureName);
 
   const user = await UserModel.findOne({ token: req.params.token });
@@ -475,5 +476,74 @@ router.post('/update-avatar/:token', async function (req, res, next) {
 
   res.json({ img })
 })
+
+router.get('/get-statistics/:token', async function (req, res, next) {
+
+  const user = await UserModel.findOne({ token: req.params.token }).populate('artworkLiked').populate('artworkList')
+  let noArtworksLiked = false;
+
+  //on crée un tableau qui regroupe les oeuvres likées et les oeuvres mises en favoris
+  const artworksLikedFav = user.artworkLiked.concat(user.artworkList)
+
+  if (artworksLikedFav.length === 0) {
+    noArtworksLiked = true;
+  }
+
+  //on filtre le tableau des oeuvres likées/fav qu'on vient de créer pour ne garder que ceux qui ont la catégorie souhaitée, 
+  //puis on divise par la longueur du tableau d'oeuvres likées/fav pour avoir un pourcentage 
+
+  const abstractCategoryPourcentage = Math.round(artworksLikedFav.filter(obj => obj.category === 'Abstract').length / artworksLikedFav.length * 100)
+  const landscapePourcentage = Math.round(artworksLikedFav.filter(obj => obj.category === 'Landscape').length / artworksLikedFav.length * 100)
+  const urbanPourcentage = Math.round(artworksLikedFav.filter(obj => obj.category === 'Urban').length / artworksLikedFav.length * 100)
+  const portraitPourcentage = Math.round(artworksLikedFav.filter(obj => obj.category === 'Portrait').length / artworksLikedFav.length * 100)
+  const monumentalPourcentage = Math.round(artworksLikedFav.filter(obj => obj.category === 'Monumental').length / artworksLikedFav.length * 100)
+  const animalPourcentage = Math.round(artworksLikedFav.filter(obj => obj.category === 'Animal').length / artworksLikedFav.length * 100)
+  const everydayLifePourcentage = Math.round(artworksLikedFav.filter(obj => obj.category === 'EverydayLife').length / artworksLikedFav.length * 100)
+  const popArtCategoryPourcentage = Math.round(artworksLikedFav.filter(obj => obj.category === 'PopArt').length / artworksLikedFav.length * 100)
+  const nudePourcentage = Math.round(artworksLikedFav.filter(obj => obj.category === 'Nude').length / artworksLikedFav.length * 100)
+  const naturePourcentage = Math.round(artworksLikedFav.filter(obj => obj.category === 'Nature').length / artworksLikedFav.length * 100)
+  const stillLifePourcentage = Math.round(artworksLikedFav.filter(obj => obj.category === 'StillLife').length / artworksLikedFav.length * 100)
+  const digitalPourcentage = Math.round(artworksLikedFav.filter(obj => obj.category === 'Digital').length / artworksLikedFav.length * 100)
+
+  const categoriesPourcentage = [
+    { name: 'Abstract', pourcentage: abstractCategoryPourcentage, img: 'https://images.pexels.com/photos/2693212/pexels-photo-2693212.png?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
+    { name: 'Landscape', pourcentage: landscapePourcentage, img: 'https://images.pexels.com/photos/2356059/pexels-photo-2356059.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
+    { name: 'Urban', pourcentage: urbanPourcentage, img: 'https://images.pexels.com/photos/417023/pexels-photo-417023.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
+    { name: 'Portrait', pourcentage: portraitPourcentage, img: 'https://images.pexels.com/photos/3657140/pexels-photo-3657140.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
+    { name: 'Monumental', pourcentage: monumentalPourcentage, img: 'https://images.pexels.com/photos/5308359/pexels-photo-5308359.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
+    { name: 'Animal', pourcentage: animalPourcentage, img: 'https://images.pexels.com/photos/1076758/pexels-photo-1076758.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
+    { name: 'EverydayLife', pourcentage: everydayLifePourcentage, img: 'https://images.pexels.com/photos/6127025/pexels-photo-6127025.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
+    { name: 'PopArt', pourcentage: popArtCategoryPourcentage, img: 'https://cdn.pixabay.com/photo/2017/09/02/06/26/pop-art-2706464_960_720.jpg' },
+    { name: 'Nude', pourcentage: nudePourcentage, img: 'https://images.pexels.com/photos/230675/pexels-photo-230675.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
+    { name: 'Nature', pourcentage: naturePourcentage, img: 'https://images.pexels.com/photos/3225517/pexels-photo-3225517.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
+    { name: 'StillLife', pourcentage: stillLifePourcentage, img: 'https://upload.wikimedia.org/wikipedia/commons/1/1a/Nature_morte_%28Paul_C%C3%A9zanne%29_%283332859798%29.jpg' },
+    { name: 'Digital', pourcentage: digitalPourcentage, img: 'https://images.pexels.com/photos/7859782/pexels-photo-7859782.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
+  ]
+
+  const opArtPourcentage = Math.round(artworksLikedFav.filter(obj => obj.movement === 'OpArt').length / artworksLikedFav.length * 100)
+  const contemporaryPourcentage = Math.round(artworksLikedFav.filter(obj => obj.movement === 'Contemporary').length / artworksLikedFav.length * 100)
+  const popArtMovementPourcentage = Math.round(artworksLikedFav.filter(obj => obj.movement === 'Pop Art').length / artworksLikedFav.length * 100)
+  const abstractMovementPourcentage = Math.round(artworksLikedFav.filter(obj => obj.movement === 'Abstract').length / artworksLikedFav.length * 100)
+  const impressionismPourcentage = Math.round(artworksLikedFav.filter(obj => obj.movement === 'Impressionism').length / artworksLikedFav.length * 100)
+  const oldMastersPourcentage = Math.round(artworksLikedFav.filter(obj => obj.movement === 'Old Masters').length / artworksLikedFav.length * 100)
+  const modernismPourcentage = Math.round(artworksLikedFav.filter(obj => obj.movement === 'Modernism').length / artworksLikedFav.length * 100)
+  const bauhausPourcentage = Math.round(artworksLikedFav.filter(obj => obj.movement === 'Bauhaus').length / artworksLikedFav.length * 100)
+  const streetArtPourcentage = Math.round(artworksLikedFav.filter(obj => obj.movement === 'Street Art').length / artworksLikedFav.length * 100)
+
+  const movementsPourcentage = [
+    { name: 'OpArt', pourcentage: opArtPourcentage, img: 'https://res.cloudinary.com/lepaffe/image/upload/v1638785260/Artmore/IMG_5503_cjcsf8.jpg' },
+    { name: 'Contemporary', pourcentage: contemporaryPourcentage, img: 'https://images.pexels.com/photos/1269968/pexels-photo-1269968.jpeg?auto=compress&cs=tinysrgb&dpr=3&h=750&w=1260' },
+    { name: 'Pop Art', pourcentage: popArtMovementPourcentage, img: 'https://cdn.pixabay.com/photo/2017/09/02/06/26/pop-art-2706464_960_720.jpg' },
+    { name: 'Abstract', pourcentage: abstractMovementPourcentage, img: 'https://images.pexels.com/photos/2693212/pexels-photo-2693212.png?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
+    { name: 'Impressionism', pourcentage: impressionismPourcentage, img: 'https://t4.ftcdn.net/jpg/01/09/03/05/240_F_109030536_P0V5jYftELYNOr5GRvinHSS3Huz1PELe.jpg' },
+    { name: 'Old Masters', pourcentage: oldMastersPourcentage, img: 'https://news.artnet.com/app/news-upload/2020/01/susanna-819x1024-819x1024.jpg' },
+    { name: 'Modernism', pourcentage: modernismPourcentage, img: 'https://i2.wp.com/www.hisour.com/wp-content/uploads/2017/02/American-modernism-1910-1935.jpg?fit=960%2C640&ssl=1&w=640' },
+    { name: 'Bauhaus', pourcentage: bauhausPourcentage, img: 'https://mir-s3-cdn-cf.behance.net/project_modules/max_1200/8e24d9102448777.5f369d863ee60.jpg' },
+    { name: 'Street Art', pourcentage: streetArtPourcentage, img: 'https://images.pexels.com/photos/1647121/pexels-photo-1647121.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
+  ]
+
+  res.json({ categoriesPourcentage, movementsPourcentage, noArtworksLiked })
+})
+
 
 module.exports = router;
