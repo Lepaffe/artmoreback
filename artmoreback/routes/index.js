@@ -255,13 +255,14 @@ router.get('/auto-loggedIn/:token', async function (req, res, next) {
   var result= false
   
   const user = await UserModel.findOne({ token: req.params.token })
-  
+  console.log(user)
   if (user){
   token = user.token
   artistList = user.artistList
   artworkList = user.artworkList
   result=true
   }
+
   res.json({ result, token, artistList, artworkList })
 })
 
@@ -276,7 +277,7 @@ router.get('/get-exhibitions/:token', async function (req, res, next) {
   console.log(userCity)
 
   // on récupère toutes les expositions
-  var data = request('GET', `https://public.opendatasoft.com/api/records/1.0/search/?dataset=evenements-publics-cibul&q=&rows=105&facet=tags&facet=placename&facet=department&facet=region&facet=city&facet=date_start&facet=date_end&facet=pricing_info&facet=updated_at&facet=city_district&refine.tags=exposition&refine.date_end=2022`)
+  var data = request('GET', `https://public.opendatasoft.com/api/records/1.0/search/?dataset=evenements-publics-cibul&q=&rows=35&facet=tags&facet=placename&facet=department&facet=region&facet=city&facet=date_start&facet=date_end&facet=pricing_info&facet=updated_at&facet=city_district&refine.date_end=2022&refine.tags=Exposition`)
   var dataParse = JSON.parse(data.body)
 
   // fonction pour reformater la date
