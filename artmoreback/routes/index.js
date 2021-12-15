@@ -6,9 +6,9 @@ var fs = require('fs');
 var cloudinary = require('cloudinary').v2;
 
 cloudinary.config({
-  cloud_name: 'cloudcapsule',
-  api_key: '441832217349769',
-  api_secret: '_V8FyVznkjQyNY3EApQmumUVK2Q'
+  cloud_name: 'artplusmore',
+  api_key: '265949336448582',
+  api_secret: '3338lXifjMGROtuZaP0NmEKFBfY'
 });
 
 /* Appel API*/
@@ -507,18 +507,18 @@ router.get('/get-statistics/:token', async function (req, res, next) {
   const digitalPourcentage = Math.round(artworksLikedFav.filter(obj => obj.category === 'Digital').length / artworksLikedFav.length * 100)
 
   const categoriesPourcentage = [
-    { name: 'Abstract', pourcentage: abstractCategoryPourcentage, img: 'https://images.pexels.com/photos/2693212/pexels-photo-2693212.png?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
-    { name: 'Landscape', pourcentage: landscapePourcentage, img: 'https://images.pexels.com/photos/2356059/pexels-photo-2356059.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
-    { name: 'Urban', pourcentage: urbanPourcentage, img: 'https://images.pexels.com/photos/417023/pexels-photo-417023.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
-    { name: 'Portrait', pourcentage: portraitPourcentage, img: 'https://images.pexels.com/photos/3657140/pexels-photo-3657140.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
-    { name: 'Monumental', pourcentage: monumentalPourcentage, img: 'https://images.pexels.com/photos/5308359/pexels-photo-5308359.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
-    { name: 'Animal', pourcentage: animalPourcentage, img: 'https://images.pexels.com/photos/1076758/pexels-photo-1076758.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
-    { name: 'EverydayLife', pourcentage: everydayLifePourcentage, img: 'https://images.pexels.com/photos/6127025/pexels-photo-6127025.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
-    { name: 'PopArt', pourcentage: popArtCategoryPourcentage, img: 'https://cdn.pixabay.com/photo/2017/09/02/06/26/pop-art-2706464_960_720.jpg' },
-    { name: 'Nude', pourcentage: nudePourcentage, img: 'https://images.pexels.com/photos/230675/pexels-photo-230675.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
-    { name: 'Nature', pourcentage: naturePourcentage, img: 'https://images.pexels.com/photos/3225517/pexels-photo-3225517.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
-    { name: 'StillLife', pourcentage: stillLifePourcentage, img: 'https://upload.wikimedia.org/wikipedia/commons/1/1a/Nature_morte_%28Paul_C%C3%A9zanne%29_%283332859798%29.jpg' },
-    { name: 'Digital', pourcentage: digitalPourcentage, img: 'https://images.pexels.com/photos/7859782/pexels-photo-7859782.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
+    { name: 'Abstract', pourcentage: abstractCategoryPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639557979/pexels-photo-2693212_fjvesn.jpg' },
+    { name: 'Landscape', pourcentage: landscapePourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639558028/pexels-photo-2356059_nonufa.jpg' },
+    { name: 'Urban', pourcentage: urbanPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639558306/pexels-photo-417023_oa6nlg.jpg' },
+    { name: 'Portrait', pourcentage: portraitPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639558067/pexels-photo-3657140_sb1u6d.jpg' },
+    { name: 'Monumental', pourcentage: monumentalPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639558392/pexels-photo-5308359_po3xrh.jpg' },
+    { name: 'Animal', pourcentage: animalPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639558110/pexels-photo-1076758_ah9dyf.jpg' },
+    { name: 'EverydayLife', pourcentage: everydayLifePourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639558134/pexels-photo-6127025_fbi7vr.jpg' },
+    { name: 'PopArt', pourcentage: popArtCategoryPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639558186/pop-art-2706464_960_720_s704vd.jpg' },
+    { name: 'Nude', pourcentage: nudePourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639558246/pexels-photo-230675_smp64w.jpg' },
+    { name: 'Nature', pourcentage: naturePourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639558276/pexels-photo-3225517_cvgkgg.jpg' },
+    { name: 'StillLife', pourcentage: stillLifePourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639558361/Nature_morte__28Paul_C_C3_A9zanne_29__283332859798_29_zoil8w.jpg' },
+    { name: 'Digital', pourcentage: digitalPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639558392/pexels-photo-5308359_po3xrh.jpg' },
   ]
 
   const opArtPourcentage = Math.round(artworksLikedFav.filter(obj => obj.movement === 'OpArt').length / artworksLikedFav.length * 100)
@@ -532,15 +532,15 @@ router.get('/get-statistics/:token', async function (req, res, next) {
   const streetArtPourcentage = Math.round(artworksLikedFav.filter(obj => obj.movement === 'Street Art').length / artworksLikedFav.length * 100)
 
   const movementsPourcentage = [
-    { name: 'OpArt', pourcentage: opArtPourcentage, img: 'https://res.cloudinary.com/lepaffe/image/upload/v1638785260/Artmore/IMG_5503_cjcsf8.jpg' },
-    { name: 'Contemporary', pourcentage: contemporaryPourcentage, img: 'https://images.pexels.com/photos/1269968/pexels-photo-1269968.jpeg?auto=compress&cs=tinysrgb&dpr=3&h=750&w=1260' },
-    { name: 'Pop Art', pourcentage: popArtMovementPourcentage, img: 'https://cdn.pixabay.com/photo/2017/09/02/06/26/pop-art-2706464_960_720.jpg' },
-    { name: 'Abstract', pourcentage: abstractMovementPourcentage, img: 'https://images.pexels.com/photos/2693212/pexels-photo-2693212.png?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
-    { name: 'Impressionism', pourcentage: impressionismPourcentage, img: 'https://t4.ftcdn.net/jpg/01/09/03/05/240_F_109030536_P0V5jYftELYNOr5GRvinHSS3Huz1PELe.jpg' },
-    { name: 'Old Masters', pourcentage: oldMastersPourcentage, img: 'https://news.artnet.com/app/news-upload/2020/01/susanna-819x1024-819x1024.jpg' },
-    { name: 'Modernism', pourcentage: modernismPourcentage, img: 'https://i2.wp.com/www.hisour.com/wp-content/uploads/2017/02/American-modernism-1910-1935.jpg?fit=960%2C640&ssl=1&w=640' },
-    { name: 'Bauhaus', pourcentage: bauhausPourcentage, img: 'https://mir-s3-cdn-cf.behance.net/project_modules/max_1200/8e24d9102448777.5f369d863ee60.jpg' },
-    { name: 'Street Art', pourcentage: streetArtPourcentage, img: 'https://images.pexels.com/photos/1647121/pexels-photo-1647121.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940' },
+    { name: 'OpArt', pourcentage: opArtPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639559291/IMG_5503_cjcsf8_jhbmp6.jpg' },
+    { name: 'Contemporary', pourcentage: contemporaryPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639559337/pexels-photo-1269968_tng2ge.jpg' },
+    { name: 'Pop Art', pourcentage: popArtMovementPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639559385/pop-art-2706464_960_720_syxkrh.jpg' },
+    { name: 'Abstract', pourcentage: abstractMovementPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639559432/pexels-photo-2693212_apxsfz.jpg' },
+    { name: 'Impressionism', pourcentage: impressionismPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639560153/Claude_Monet_2C_Impression_2C_soleil_levant_r8st7x.jpg' },
+    { name: 'Old Masters', pourcentage: oldMastersPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639560766/Frans_van_MIeris_studio_-_A_shepherdess_standing_near_a_plinth_with_flowers_in_a_Classical_vase_H0027-L05801231_heateu.jpg' },
+    { name: 'Modernism', pourcentage: modernismPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639561661/tc5f4dc7_gkdvuk.jpg' },
+    { name: 'Bauhaus', pourcentage: bauhausPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639561812/Bauhaus-Signet_xhuvps.svg' },
+    { name: 'Street Art', pourcentage: streetArtPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639561880/pexels-photo-1647121_hpl1fi.jpg' },
   ]
 
   res.json({ categoriesPourcentage, movementsPourcentage, noArtworksLiked })
