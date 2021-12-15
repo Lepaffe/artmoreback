@@ -7,7 +7,7 @@ var options = {
 }
 
 mongoose.connect('mongodb+srv://artmore:artmore@artmore.dzgpf.mongodb.net/Art+More?retryWrites=true&w=majority',
-    options,
+    options, 
     function(err) {
         if (err) {
             console.log(err);

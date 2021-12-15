@@ -186,7 +186,7 @@ router.post('/sign-up', async function (req, res, next) {
       birthday: req.body.birthday,
       mediums: JSON.parse(req.body.mediums),
       categories: JSON.parse(req.body.categories),
-      img: 'https://media.istockphoto.com/vectors/avatar-icon-design-for-man-vector-id648229964?k=20&m=648229964&s=170667a&w=0&h=Rsy2ka_Mb6xutzNLNgCyWjAHuLw4K8F_JjeTcFOHdfQ=',
+      img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639574934/avatar-icon-design-for-man-vector-id648229964_hd9kza.jpg',
       expos: [],
       email: req.body.email,
       artistList: [],
