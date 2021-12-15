@@ -83,7 +83,6 @@ router.get('/get-artist-collection/:token', async function (req, res, next) {
       }
     })
     .exec();
-
   console.log('artistCollection', artistCollection.artistList[0])
   res.json({ artistCollection });
 });
@@ -156,7 +155,6 @@ router.post('/sign-up', async function (req, res, next) {
   var artistList = []
   var artworkList = []
 
-
   const data = await UserModel.findOne({
     email: req.body.email
   })
@@ -205,7 +203,92 @@ router.post('/sign-up', async function (req, res, next) {
     }
   }
   res.json({ result, error, token, artistList, artworkList })
-})
+});
+
+router.post('/sign-up-google', async function (req, res, next) {
+
+  var error = []
+  var result = false
+  var saveUser = null
+  var token = null
+  var artistList = []
+  var artworkList = []
+
+  const data = await UserModel.findOne({
+    email: req.body.email
+  })
+
+  if (data != null) {
+    error.push('Cet e-mail est déjà utilisé.')
+  }
+
+  if (req.body.firstName == ''
+    || req.body.lastName == ''
+    || req.body.email == ''
+    || req.body.city == ''
+    || req.body.birthday == ''
+  ) {
+    error.push('Tous les champs doivent être remplis.')
+  }
+
+  if (error.length == 0) {
+    var hash = bcrypt.hashSync('google', 10);
+    console.log('in sign-up-google');
+    var newUser = new UserModel({
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      city: req.body.city,
+      birthday: req.body.birthday,
+      mediums: JSON.parse(req.body.mediums),
+      categories: JSON.parse(req.body.categories),
+      img: req.body.img,
+      expos: [],
+      email: req.body.email,
+      artistList: [],
+      artworkList: [],
+      password: hash,
+      token: uid2(32),
+      daily: { day: -1, selection: [] }
+    })
+    console.log('sign-up-google before save', newUser);
+    saveUser = await newUser.save()
+
+
+    if (saveUser) {
+      result = true
+      token = saveUser.token
+    }
+  }
+  res.json({ result, error, token, artistList, artworkList })
+});
+
+router.post('/sign-in-google', async function (req, res, next) {
+
+  var result = false
+  var user = null
+  var error = []
+  var token = null
+  var artistList = []
+  var artworkList = []
+  
+  user = await UserModel.findOne({ email: req.body.email,});
+    if (user) {
+      if (bcrypt.compareSync('google', user.password)) {
+        result = true
+        token = user.token
+        artistList = user.artistList
+        artworkList = user.artworkList
+      } else {
+        result = false
+        error.push('Not a GoogleSignIn user. Go back and Signin');
+        } 
+      } else {
+        result=false;
+        error.push("user doesn't exist");
+    }
+  res.json({ result, error, token, artistList, artworkList })
+});
+
 
 router.post('/sign-in', async function (req, res, next) {
 
@@ -221,13 +304,14 @@ router.post('/sign-in', async function (req, res, next) {
   ) {
     error.push('Tous les champs doivent être remplis.')
   }
-
+  
   if (error.length == 0) {
     user = await UserModel.findOne({
       email: req.body.email,
     })
 
     if (user) {
+      
       if (bcrypt.compareSync(req.body.password, user.password)) {
         result = true
         token = user.token
@@ -235,15 +319,19 @@ router.post('/sign-in', async function (req, res, next) {
         artworkList = user.artworkList
       } else {
         result = false
-        error.push('Mot de passe incorrect')
-      }
+        if (bcrypt.compareSync('google', user.password)){
+          error.push('Go back and Signin via Google');
+        } else {
+        error.push('Mot de passe incorrect');
+        }
+      } 
     } else {
-      error.push('Mail incorrect')
+        error.push('Mail incorrect')
     }
   }
   console.log(token)
   res.json({ result, error, token, artistList, artworkList })
-})
+});
 
 /* Landing Screen - auto-logged in */
 
@@ -256,11 +344,11 @@ router.get('/auto-loggedIn/:token', async function (req, res, next) {
 
   const user = await UserModel.findOne({ token: req.params.token })
   console.log(user)
-  if (user){
-  token = user.token
-  artistList = user.artistList
-  artworkList = user.artworkList
-  result=true
+  if (user) {
+    token = user.token
+    artistList = user.artistList
+    artworkList = user.artworkList
+    result = true
   }
 
   res.json({ result, token, artistList, artworkList })
@@ -377,9 +465,43 @@ router.get('/get-daily-selection/:token', async function (req, res, next) {
   const artist2 = await ArtistModel.findOne({ artistArtwork: { $in: artworkSelections.dailyArray[2]._id } }).populate('artistArtwork')
   const artist3 = await ArtistModel.findOne({ artistArtwork: { $in: artworkSelections.dailyArray[3]._id } }).populate('artistArtwork')
 
+  let isFav0 = await UserModel.findOne({ token: req.params.token, artworkList: { $in: artworkSelections.dailyArray[0]._id } })
+  let isFav1 = await UserModel.findOne({ token: req.params.token, artworkList: { $in: artworkSelections.dailyArray[1]._id } })
+  let isFav2 = await UserModel.findOne({ token: req.params.token, artworkList: { $in: artworkSelections.dailyArray[2]._id } })
+  let isFav3 = await UserModel.findOne({ token: req.params.token, artworkList: { $in: artworkSelections.dailyArray[3]._id } })
+
+  if (isFav0) {
+    isFav0 = true
+  } else {
+    isFav0 = false
+  }
+
+  if (isFav1) {
+    isFav1 = true
+  } else {
+    isFav1 = false
+  }
+
+  if (isFav2) {
+    isFav2 = true
+  } else {
+    isFav2 = false
+  }
+
+  if (isFav3) {
+    isFav3 = true
+  } else {
+    isFav3 = false
+  }
+
+
   //on créé le tableau qui sera renvoyé au front, où chaque élément est un objet qui contient l'oeuvre avec l'artiste qui lui correspond
-  const artworksWithArtists = [{ artwork: artworkSelections.dailyArray[0], artist: artist0 }, { artwork: artworkSelections.dailyArray[1], artist: artist1 },
-  { artwork: artworkSelections.dailyArray[2], artist: artist2 }, { artwork: artworkSelections.dailyArray[3], artist: artist3 }]
+  const artworksWithArtists = [
+    { artwork: artworkSelections.dailyArray[0], artist: artist0, isFav: isFav0 },
+    { artwork: artworkSelections.dailyArray[1], artist: artist1, isFav: isFav1 },
+    { artwork: artworkSelections.dailyArray[2], artist: artist2, isFav: isFav2 },
+    { artwork: artworkSelections.dailyArray[3], artist: artist3, isFav: isFav3 }
+  ]
 
   res.json({ artworksWithArtists });
 });
