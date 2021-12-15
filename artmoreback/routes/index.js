@@ -377,9 +377,43 @@ router.get('/get-daily-selection/:token', async function (req, res, next) {
   const artist2 = await ArtistModel.findOne({ artistArtwork: { $in: artworkSelections.dailyArray[2]._id } }).populate('artistArtwork')
   const artist3 = await ArtistModel.findOne({ artistArtwork: { $in: artworkSelections.dailyArray[3]._id } }).populate('artistArtwork')
 
+  let isFav0 = await UserModel.findOne({ token: req.params.token, artworkList: { $in: artworkSelections.dailyArray[0]._id } })
+  let isFav1 = await UserModel.findOne({ token: req.params.token, artworkList: { $in: artworkSelections.dailyArray[1]._id } })
+  let isFav2 = await UserModel.findOne({ token: req.params.token, artworkList: { $in: artworkSelections.dailyArray[2]._id } })
+  let isFav3 = await UserModel.findOne({ token: req.params.token, artworkList: { $in: artworkSelections.dailyArray[3]._id } })
+
+  if (isFav0) {
+    isFav0 = true
+  } else {
+    isFav0 = false
+  }
+
+  if (isFav1) {
+    isFav1 = true
+  } else {
+    isFav1 = false
+  }
+
+  if (isFav2) {
+    isFav2 = true
+  } else {
+    isFav2 = false
+  }
+
+  if (isFav3) {
+    isFav3 = true
+  } else {
+    isFav3 = false
+  }
+
+
   //on créé le tableau qui sera renvoyé au front, où chaque élément est un objet qui contient l'oeuvre avec l'artiste qui lui correspond
-  const artworksWithArtists = [{ artwork: artworkSelections.dailyArray[0], artist: artist0 }, { artwork: artworkSelections.dailyArray[1], artist: artist1 },
-  { artwork: artworkSelections.dailyArray[2], artist: artist2 }, { artwork: artworkSelections.dailyArray[3], artist: artist3 }]
+  const artworksWithArtists = [
+    { artwork: artworkSelections.dailyArray[0], artist: artist0, isFav: isFav0 },
+    { artwork: artworkSelections.dailyArray[1], artist: artist1, isFav: isFav1 },
+    { artwork: artworkSelections.dailyArray[2], artist: artist2, isFav: isFav2 },
+    { artwork: artworkSelections.dailyArray[3], artist: artist3, isFav: isFav3 }
+  ]
 
   res.json({ artworksWithArtists });
 });
