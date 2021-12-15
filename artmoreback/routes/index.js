@@ -256,11 +256,11 @@ router.get('/auto-loggedIn/:token', async function (req, res, next) {
 
   const user = await UserModel.findOne({ token: req.params.token })
   console.log(user)
-  if (user){
-  token = user.token
-  artistList = user.artistList
-  artworkList = user.artworkList
-  result=true
+  if (user) {
+    token = user.token
+    artistList = user.artistList
+    artworkList = user.artworkList
+    result = true
   }
 
   res.json({ result, token, artistList, artworkList })
