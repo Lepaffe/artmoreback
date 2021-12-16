@@ -661,8 +661,8 @@ router.get('/get-statistics/:token', async function (req, res, next) {
     { name: 'Impressionism', pourcentage: impressionismPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639560153/Claude_Monet_2C_Impression_2C_soleil_levant_r8st7x.jpg' },
     { name: 'Old Masters', pourcentage: oldMastersPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639560766/Frans_van_MIeris_studio_-_A_shepherdess_standing_near_a_plinth_with_flowers_in_a_Classical_vase_H0027-L05801231_heateu.jpg' },
     { name: 'Modernism', pourcentage: modernismPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639561661/tc5f4dc7_gkdvuk.jpg' },
-    { name: 'Bauhaus', pourcentage: bauhausPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639561812/Bauhaus-Signet_xhuvps.svg' },
-    { name: 'Street Art', pourcentage: streetArtPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639642825/kandinsky_xatso4.jpg' },
+    { name: 'Bauhaus', pourcentage: bauhausPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639642825/kandinsky_xatso4.jpg' },
+    { name: 'Street Art', pourcentage: streetArtPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639561880/pexels-photo-1647121_hpl1fi.jpg' },
   ]
 
   res.json({ categoriesPourcentage, movementsPourcentage, noArtworksLiked })
