@@ -640,7 +640,7 @@ router.get('/get-statistics/:token', async function (req, res, next) {
     { name: 'Nude', pourcentage: nudePourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639558246/pexels-photo-230675_smp64w.jpg' },
     { name: 'Nature', pourcentage: naturePourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639558276/pexels-photo-3225517_cvgkgg.jpg' },
     { name: 'StillLife', pourcentage: stillLifePourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639558361/Nature_morte__28Paul_C_C3_A9zanne_29__283332859798_29_zoil8w.jpg' },
-    { name: 'Digital', pourcentage: digitalPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639558392/pexels-photo-5308359_po3xrh.jpg' },
+    { name: 'Digital', pourcentage: digitalPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639590336/pexels-photo-2783848_jyddpn.jpg' },
   ]
 
   const opArtPourcentage = Math.round(artworksLikedFav.filter(obj => obj.movement === 'OpArt').length / artworksLikedFav.length * 100)
@@ -662,7 +662,7 @@ router.get('/get-statistics/:token', async function (req, res, next) {
     { name: 'Old Masters', pourcentage: oldMastersPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639560766/Frans_van_MIeris_studio_-_A_shepherdess_standing_near_a_plinth_with_flowers_in_a_Classical_vase_H0027-L05801231_heateu.jpg' },
     { name: 'Modernism', pourcentage: modernismPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639561661/tc5f4dc7_gkdvuk.jpg' },
     { name: 'Bauhaus', pourcentage: bauhausPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639561812/Bauhaus-Signet_xhuvps.svg' },
-    { name: 'Street Art', pourcentage: streetArtPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639561880/pexels-photo-1647121_hpl1fi.jpg' },
+    { name: 'Street Art', pourcentage: streetArtPourcentage, img: 'https://res.cloudinary.com/artplusmore/image/upload/v1639642825/kandinsky_xatso4.jpg' },
   ]
 
   res.json({ categoriesPourcentage, movementsPourcentage, noArtworksLiked })
