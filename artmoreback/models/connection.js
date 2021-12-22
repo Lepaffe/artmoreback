@@ -6,7 +6,7 @@ var options = {
     useNewUrlParser: true,
 }
 
-mongoose.connect('mongodb+srv://artmore:artmore@artmore.dzgpf.mongodb.net/Art+More?retryWrites=true&w=majority',
+mongoose.connect(`mongodb+srv://${process.env.MONGO_KEY}@artmore.dzgpf.mongodb.net/Art+More?retryWrites=true&w=majority`,
     options, 
     function(err) {
         if (err) {

@@ -1,3 +1,4 @@
+require('dotenv').config();
 var fileUpload = require('express-fileupload');
 require('./models/connection');
 
