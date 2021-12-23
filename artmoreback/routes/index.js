@@ -1,9 +1,20 @@
 var express = require('express');
 var router = express.Router();
+
+var bcrypt = require('bcrypt');
+var uid2 = require('uid2');
+
+var request = require('sync-request');
+
 var uniqid = require('uniqid');
 var fs = require('fs');
-
 var cloudinary = require('cloudinary').v2;
+
+var ArtistModel = require('../models/artists')
+var UserModel = require('../models/users')
+
+// import du module de recommandation
+var Recommend = require('../mymodules/recommend');
 
 cloudinary.config({
   cloud_name: 'artplusmore',
@@ -11,28 +22,15 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_SECRET
 });
 
-/* Appel API*/
-var request = require('sync-request');
 
-/* Require Models*/
-var ArtistModel = require('../models/artists')
-var ArtworkModel = require('../models/artworks')
-var UserModel = require('../models/users')
+/* SwipeScreen */
 
-// import du module de reommandation
-var Recommend = require('../mymodules/recommend');
-
-/* sécuriser app*/
-var bcrypt = require('bcrypt');
-var uid2 = require('uid2');
-
-
-/* Swipe page. */
 router.get('/get-artwork-list/:token', async function (req, res, next) {
   // appel de l'algo de selection 
   var artworkSelections = await Recommend(req.params.token);
   res.json({ artworks: artworkSelections.swipeArray });
 });
+
 
 router.post('/like', async function (req, res, next) {
   //si l'oeuvre est deja liké on ne la rajoute pas
@@ -43,12 +41,13 @@ router.post('/like', async function (req, res, next) {
   res.json({ result })
 })
 
+
 router.post('/dislike', async function (req, res, next) {
   //si l'oeuvre est deja dans les Disliked on ne la rajoute pas
   let alreadyIn = await UserModel.findOne({ token: req.body.token, artworkDisliked: { $in: req.body.artworkId } })
 
   if (!alreadyIn) {
-    //on azjoute l'oeuvre aux Disliked
+    //on ajoute l'oeuvre aux Disliked
     var result = await UserModel.updateOne({ token: req.body.token }, { $push: { artworkDisliked: { _id: req.body.artworkId } } })
     //on verifie que l'oeuvre n'etait pas dans les Liked
     let isLiked = await UserModel.findOne({ token: req.body.token, artworkLiked: { $in: req.body.artworkId } });
@@ -60,8 +59,7 @@ router.post('/dislike', async function (req, res, next) {
   res.json({ result })
 })
 
-
-/* Artwork Screen */
+/* Ajout et suppression d'une oeuvre à la collection */
 
 router.post('/add-artworklist', async function (req, res, next) {
   // update le tableau "artworkList" dans le model user afin d'ajouter l'object ID d'une oeuvre dans la base de donnée
@@ -83,15 +81,16 @@ router.post('/delete-artworklist', async function (req, res, next) {
 
 
 
-/* Collection Screen */
+/* CollectionScreen */
 
 router.get('/get-collection/:token', async function (req, res, next) {
+  console.log('ok')
   // Récuperer la clé étrangère artworkList du UserModel en filtrant avec son token
   var collection = await UserModel.findOne({ token: req.params.token }).populate('artworkList')
   res.json({ collection });
 });
 
-/* Collection Artist Screen */
+/* MyArtistsScreen */
 
 router.get('/get-artist-collection/:token', async function (req, res, next) {
   // Récuperer la clé étrangère artistList du UserModel en filtrant avec son token
@@ -103,7 +102,7 @@ router.get('/get-artist-collection/:token', async function (req, res, next) {
       }
     })
     .exec();
-  console.log('artistCollection', artistCollection.artistList[0])
+
   res.json({ artistCollection });
 });
 
@@ -135,7 +134,8 @@ router.post('/delete-artistlist', async function (req, res, next) {
   res.json({ artistDeleted: true });
 });
 
-/* Login Screen */
+/* Sign-in - Sign-up */
+
 router.post('/sign-up', async function (req, res, next) {
 
   var error = []
@@ -165,7 +165,7 @@ router.post('/sign-up', async function (req, res, next) {
   }
 
   if (error.length == 0) {
-    //console.log('birthday', new Date(req.body.birthday));
+
     var hash = bcrypt.hashSync(req.body.password, 10);
     var newUser = new UserModel({
       firstName: req.body.firstName,
@@ -260,22 +260,22 @@ router.post('/sign-in-google', async function (req, res, next) {
   var token = null
   var artistList = []
   var artworkList = []
-  
-  user = await UserModel.findOne({ email: req.body.email,});
-    if (user) {
-      if (bcrypt.compareSync('google', user.password)) {
-        result = true
-        token = user.token
-        artistList = user.artistList
-        artworkList = user.artworkList
-      } else {
-        result = false
-        error.push('Not a GoogleSignIn user. Go back and Signin');
-        } 
-      } else {
-        result=false;
-        error.push("user doesn't exist");
+
+  user = await UserModel.findOne({ email: req.body.email, });
+  if (user) {
+    if (bcrypt.compareSync('google', user.password)) {
+      result = true
+      token = user.token
+      artistList = user.artistList
+      artworkList = user.artworkList
+    } else {
+      result = false
+      error.push('Not a GoogleSignIn user. Go back and Signin');
     }
+  } else {
+    result = false;
+    error.push("user doesn't exist");
+  }
   res.json({ result, error, token, artistList, artworkList })
 });
 
@@ -294,14 +294,14 @@ router.post('/sign-in', async function (req, res, next) {
   ) {
     error.push('Tous les champs doivent être remplis.')
   }
-  
+
   if (error.length == 0) {
     user = await UserModel.findOne({
       email: req.body.email,
     })
 
     if (user) {
-      
+
       if (bcrypt.compareSync(req.body.password, user.password)) {
         result = true
         token = user.token
@@ -309,21 +309,21 @@ router.post('/sign-in', async function (req, res, next) {
         artworkList = user.artworkList
       } else {
         result = false
-        if (bcrypt.compareSync('google', user.password)){
+        if (bcrypt.compareSync('google', user.password)) {
           error.push('Go back and Signin via Google');
         } else {
-        error.push('Mot de passe incorrect');
+          error.push('Mot de passe incorrect');
         }
-      } 
+      }
     } else {
-        error.push('Mail incorrect')
+      error.push('Mail incorrect')
     }
   }
   console.log(token)
   res.json({ result, error, token, artistList, artworkList })
 });
 
-/* Landing Screen - auto-logged in */
+/* Landing Screen */
 
 router.get('/auto-loggedIn/:token', async function (req, res, next) {
 
@@ -345,7 +345,7 @@ router.get('/auto-loggedIn/:token', async function (req, res, next) {
 })
 
 
-/* Get exhibitions list Screen */
+/* ExhibitionScreen */
 
 router.get('/get-exhibitions/:token', async function (req, res, next) {
 
@@ -418,19 +418,20 @@ router.get('/get-my-exhibitions/:token', async function (req, res, next) {
 });
 
 
-//Daily selection
+/* DailyScreen */
 
 router.get('/get-daily-selection/:token', async function (req, res, next) {
-
+  console.log('route daily')
   // appel de l'algo de selection 
   var artworkSelections = await Recommend(req.params.token);
 
-  //pour chaque oeuvre de notre tableau, on récupère l'artiste (j'ai fait sans map() pour le moment histoire de bien comprendre)
+  //pour chaque oeuvre de notre tableau dailyArrau, on récupère l'artiste 
   const artist0 = await ArtistModel.findOne({ artistArtwork: { $in: artworkSelections.dailyArray[0]._id } }).populate('artistArtwork')
   const artist1 = await ArtistModel.findOne({ artistArtwork: { $in: artworkSelections.dailyArray[1]._id } }).populate('artistArtwork')
   const artist2 = await ArtistModel.findOne({ artistArtwork: { $in: artworkSelections.dailyArray[2]._id } }).populate('artistArtwork')
   const artist3 = await ArtistModel.findOne({ artistArtwork: { $in: artworkSelections.dailyArray[3]._id } }).populate('artistArtwork')
 
+  //on vérifie si les oeuvres de la DailyArray on déjà été mise en collection (possible si l'user revient voir sa Daily plus tard dans la journée par ex)
   let isFav0 = await UserModel.findOne({ token: req.params.token, artworkList: { $in: artworkSelections.dailyArray[0]._id } })
   let isFav1 = await UserModel.findOne({ token: req.params.token, artworkList: { $in: artworkSelections.dailyArray[1]._id } })
   let isFav2 = await UserModel.findOne({ token: req.params.token, artworkList: { $in: artworkSelections.dailyArray[2]._id } })
@@ -472,7 +473,7 @@ router.get('/get-daily-selection/:token', async function (req, res, next) {
   res.json({ artworksWithArtists });
 });
 
-// Profile screen
+/* Profile screen */
 
 router.get('/get-username/:token', async function (req, res, next) {
 
@@ -486,7 +487,8 @@ router.get('/get-username/:token', async function (req, res, next) {
 })
 
 
-//Settings screen
+/* Settings screen */
+
 router.get('/get-user-info/:token', async function (req, res, next) {
 
   const user = await UserModel.findOne({ token: req.params.token })
@@ -565,6 +567,8 @@ router.post('/update-avatar/:token', async function (req, res, next) {
 
   res.json({ img })
 })
+
+/* StatisticsScreen */
 
 router.get('/get-statistics/:token', async function (req, res, next) {
 

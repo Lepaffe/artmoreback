@@ -7,15 +7,15 @@ var options = {
 }
 
 mongoose.connect(`mongodb+srv://${process.env.MONGO_KEY}@artmore.dzgpf.mongodb.net/Art+More?retryWrites=true&w=majority`,
-    options, 
-    function(err) {
+    options,
+    function (err) {
         if (err) {
             console.log(err);
-        }else {
+        } else {
             console.log('Connexion BDD réussie!');
         }
     }
-    
+
 )
 
 module.exports = mongoose
