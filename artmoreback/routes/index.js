@@ -26,10 +26,6 @@ var Recommend = require('../mymodules/recommend');
 var bcrypt = require('bcrypt');
 var uid2 = require('uid2');
 
-/* GET home page. */
-router.get('/', function (req, res, next) {
-  res.render('index', { title: 'Express' });
-});
 
 /* Swipe page. */
 router.get('/get-artwork-list/:token', async function (req, res, next) {
@@ -69,7 +65,6 @@ router.post('/dislike', async function (req, res, next) {
   console.log('result', result, 'result2', result2)
   res.json({ result })
 })
-
 
 /* Artwork Screen */
 

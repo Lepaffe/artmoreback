@@ -93,7 +93,7 @@ const Recommend = async (token) => {
     var dailyArray=[];
     let today=new Date();
     today=today.getDay();
-    
+    //console.log('user today',user);
     if (user.daily.day != undefined && today===user.daily.day){
         //si même journée on garde la même selection
         dailyArray= user.daily.selection;
@@ -120,7 +120,7 @@ const Recommend = async (token) => {
     swipeArray=shuffleArray(swipeArray);
    
    
-   
+    //console.log('daily', dailyArray);
     return {swipeArray,dailyArray}
  }   
 }
