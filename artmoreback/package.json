@@ -20,5 +20,8 @@
     "sync-request": "^6.1.0",
     "uid2": "^1.0.0",
     "uniqid": "^5.4.0"
+  },
+  "devDependencies": {
+    "supertest": "^6.1.6"
   }
 }
