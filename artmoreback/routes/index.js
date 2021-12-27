@@ -1,9 +1,20 @@
 var express = require('express');
 var router = express.Router();
+
+var bcrypt = require('bcrypt');
+var uid2 = require('uid2');
+
+var request = require('sync-request');
+
 var uniqid = require('uniqid');
 var fs = require('fs');
-
 var cloudinary = require('cloudinary').v2;
+
+var ArtistModel = require('../models/artists')
+var UserModel = require('../models/users')
+
+// import du module de recommandation
+var Recommend = require('../mymodules/recommend');
 
 cloudinary.config({
   cloud_name: 'artplusmore',
@@ -11,97 +22,93 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_SECRET
 });
 
-/* Appel API*/
-var request = require('sync-request');
 
-/* Require Models*/
-var ArtistModel = require('../models/artists')
-var ArtworkModel = require('../models/artworks')
-var UserModel = require('../models/users')
+/* SwipeScreen */
 
-// import du module de reommandation
-var Recommend = require('../mymodules/recommend');
-
-/* sécuriser app*/
-var bcrypt = require('bcrypt');
-var uid2 = require('uid2');
-
-
-/* Swipe page. */
 router.get('/get-artwork-list/:token', async function (req, res, next) {
   // appel de l'algo de selection 
   var artworkSelections = await Recommend(req.params.token);
-  console.log('result', artworkSelections);
-
   res.json({ artworks: artworkSelections.swipeArray });
 });
 
+
 router.post('/like', async function (req, res, next) {
-  //si l'oeuvre est deja liké on ne la rajoute pas
+  //si l'oeuvre est deja likée on ne la rajoute pas
   let alreadyIn = await UserModel.findOne({ token: req.body.token, artworkLiked: { $in: req.body.artworkId } })
   if (!alreadyIn) {
-    console.log(req.body.token, req.body.artworkId);
     var result = await UserModel.updateOne({ token: req.body.token }, { $push: { artworkLiked: { _id: req.body.artworkId } } })
   }
-  console.log('result', result, alreadyIn);
   res.json({ result })
 })
+
 
 router.post('/dislike', async function (req, res, next) {
   //si l'oeuvre est deja dans les Disliked on ne la rajoute pas
   let alreadyIn = await UserModel.findOne({ token: req.body.token, artworkDisliked: { $in: req.body.artworkId } })
 
   if (!alreadyIn) {
-    //on azjoute l'oeuvre aux Disliked
-    console.log('in ', req.body.token, req.body.artworkId);
+    //on ajoute l'oeuvre aux Disliked
     var result = await UserModel.updateOne({ token: req.body.token }, { $push: { artworkDisliked: { _id: req.body.artworkId } } })
-    //on verifie que l'oeuvre n'etait pas dans les Liked
+
+    //on verifie que l'oeuvre n'etait pas dans les Liked  ////////// 
     let isLiked = await UserModel.findOne({ token: req.body.token, artworkLiked: { $in: req.body.artworkId } });
     //on verifie que l'oeuvre n'est pas deja dans les Liked si oui on la retire des liked 
     if (isLiked) {
       var result2 = await UserModel.updateOne({ token: req.body.token }, { $pull: { artworkLiked: { $in: req.body.artworkId } } })
     }
   }
-  console.log('result', result, 'result2', result2)
+
   res.json({ result })
 })
 
-/* Artwork Screen */
+/* Ajout et suppression d'une oeuvre à la collection */
 
 router.post('/add-artworklist', async function (req, res, next) {
   // update le tableau "artworkList" dans le model user afin d'ajouter l'object ID d'une oeuvre dans la base de donnée
   let alreadyAdded = await UserModel.findOne({ token: req.body.token, artworkList: { $in: req.body.artworkId } })
-  console.log("already", alreadyAdded)
+
   if (!alreadyAdded) {
     var result = await UserModel.updateOne({ token: req.body.token }, { $push: { artworkList: { _id: req.body.artworkId } } })
   }
-  console.log(result)
-  res.json({ artwordSaved: true });
+
+  if (result.modifiedCount === 1) {
+    result = true;
+  } else {
+    result = false;
+  }
+
+  res.json({ result });
 });
 
-router.post('/delete-artworklist', async function (req, res, next) {
+router.delete('/delete-artworklist', async function (req, res, next) {
 
   // supprime un element de l'array artworkList du ModelUser dans la base de donnée
-  var result3 = await UserModel.updateOne({ token: req.body.token }, { $pull: { artworkList: { $in: req.body.artworkId } } })
-  console.log(result3)
-  res.json({ artworkDeleted: true });
+  var result = await UserModel.updateOne({ token: req.body.token }, { $pull: { artworkList: { $in: req.body.artworkId } } })
+
+  if (result.modifiedCount === 1) {
+    result = true;
+  } else {
+    result = false;
+  }
+
+  res.json({ result });
 });
 
 
 
-/* Collection Screen */
+/* CollectionScreen */
 
 router.get('/get-collection/:token', async function (req, res, next) {
   // Récuperer la clé étrangère artworkList du UserModel en filtrant avec son token
-  var collection = await UserModel.findOne({ token: req.params.token }).populate('artworkList')
-  res.json({ collection });
+  var user = await UserModel.findOne({ token: req.params.token }).populate('artworkList')
+  res.json({ collection: user.artworkList });
 });
 
-/* Collection Artist Screen */
+/* MyArtistsScreen */
 
 router.get('/get-artist-collection/:token', async function (req, res, next) {
   // Récuperer la clé étrangère artistList du UserModel en filtrant avec son token
-  var artistCollection = await UserModel.findOne({ token: req.params.token })
+  var user = await UserModel.findOne({ token: req.params.token })
     .populate({
       path: 'artistList',      //on populate dans userModel la artisList
       populate: {             // on lui dit de faire un deuxieme populate avec le path ArtistAtwork 
@@ -109,55 +116,66 @@ router.get('/get-artist-collection/:token', async function (req, res, next) {
       }
     })
     .exec();
-  console.log('artistCollection', artistCollection.artistList[0])
-  res.json({ artistCollection });
-});
 
+  res.json({ artistCollection: user.artistList });
+});
 
 /* Artist Screen */
 
 router.get('/get-artist-detail/:artworkId', async function (req, res, next) {
-  // lire le ArtistModel en filtrant avec l'id de l'artiste et populate avec ses oeuvres
-  const artworkId = req.params.artworkId;
-  var artist = await ArtistModel.findOne({ artistArtwork: { $in: artworkId } }).populate('artistArtwork')
+
+  var artist = await ArtistModel.findOne({ artistArtwork: { $in: req.params.artworkId } }).populate('artistArtwork')
+
   res.json({ artist });
 });
 
 router.post('/add-artistlist', async function (req, res, next) {
-  console.log("coucou")
+
   let alreadyAdded = await UserModel.findOne({ token: req.body.token, artistList: { $in: req.body.artworkId } })
+
   if (!alreadyAdded) {
     // update le tableau "artist" dans le model user afin d'ajouter l'object ID d'une oeuvre dans la base de donnée
-    var result2 = await UserModel.updateOne({ token: req.body.token }, { $push: { artistList: { _id: req.body.artistId } } })
+    var result = await UserModel.updateOne({ token: req.body.token }, { $push: { artistList: { _id: req.body.artistId } } })
   }
-  console.log(result2)
-  res.json({ artistSaved: true });
+
+  if (result.modifiedCount === 1) {
+    result = true;
+  } else {
+    result = false;
+  }
+
+  res.json({ result });
 });
 
-router.post('/delete-artistlist', async function (req, res, next) {
+router.delete('/delete-artistlist', async function (req, res, next) {
 
   // supprime un element de l'array artistList du ModelUser dans la base de donnée
-  var result3 = await UserModel.updateOne({ token: req.body.token }, { $pull: { artistList: { $in: req.body.artistId } } })
-  console.log(result3)
-  res.json({ artistDeleted: true });
+  var result = await UserModel.updateOne({ token: req.body.token }, { $pull: { artistList: { $in: req.body.artistId } } })
+
+  if (result.modifiedCount === 1) {
+    result = true;
+  } else {
+    result = false;
+  }
+
+  res.json({ result });
 });
 
-/* Login Screen */
+/* Sign-in - Sign-up */
+
 router.post('/sign-up', async function (req, res, next) {
 
   var error = []
   var result = false
   var saveUser = null
   var token = null
-  var artistList = []
-  var artworkList = []
 
   const data = await UserModel.findOne({
     email: req.body.email
   })
 
   if (data != null) {
-    error.push('Cet e-mail est déjà utilisé.')
+    error.push('This email is already taken.')
   }
 
   if (req.body.firstName == ''
@@ -168,12 +186,13 @@ router.post('/sign-up', async function (req, res, next) {
     || req.body.password == ''
 
   ) {
-    error.push('Tous les champs doivent être remplis.')
+    error.push('All fields must be completed.')
   }
 
   if (error.length == 0) {
-    //console.log('birthday', new Date(req.body.birthday));
+
     var hash = bcrypt.hashSync(req.body.password, 10);
+
     var newUser = new UserModel({
       firstName: req.body.firstName,
       lastName: req.body.lastName,
@@ -188,18 +207,17 @@ router.post('/sign-up', async function (req, res, next) {
       artworkList: [],
       password: hash,
       token: uid2(32),
-      daily: { day: -1, selection: [] }
+      daily: { day: -1, selection: [] } ////pourquoi -1 ?
     })
 
     saveUser = await newUser.save()
-
 
     if (saveUser) {
       result = true
       token = saveUser.token
     }
   }
-  res.json({ result, error, token, artistList, artworkList })
+  res.json({ result, error, token })
 });
 
 router.post('/sign-up-google', async function (req, res, next) {
@@ -208,15 +226,13 @@ router.post('/sign-up-google', async function (req, res, next) {
   var result = false
   var saveUser = null
   var token = null
-  var artistList = []
-  var artworkList = []
 
   const data = await UserModel.findOne({
     email: req.body.email
   })
 
   if (data != null) {
-    error.push('Cet e-mail est déjà utilisé.')
+    error.push('This email is already taken.')
   }
 
   if (req.body.firstName == ''
@@ -225,12 +241,18 @@ router.post('/sign-up-google', async function (req, res, next) {
     || req.body.city == ''
     || req.body.birthday == ''
   ) {
-    error.push('Tous les champs doivent être remplis.')
+    error.push('All fields must be completed.')
   }
 
   if (error.length == 0) {
+
+    /* pour les user google plutot que de creer un champ pour indiquer que c un user gglesignin 
+    j'ai opté pour mettre un password 'google' dans la bdd (pwd impossible pour un autre user vu qu'il y a la regex) 
+    et je redirige si pas gglesign in vers le signin classique
+    et je redirige aussi en sign in classique si user ggle vers le sign in via ggle
+    comme ça si notre base est hackée personne ne pourra savoir qui est userggle ou pas.*/
     var hash = bcrypt.hashSync('google', 10);
-    console.log('in sign-up-google');
+
     var newUser = new UserModel({
       firstName: req.body.firstName,
       lastName: req.body.lastName,
@@ -247,16 +269,15 @@ router.post('/sign-up-google', async function (req, res, next) {
       token: uid2(32),
       daily: { day: -1, selection: [] }
     })
-    console.log('sign-up-google before save', newUser);
-    saveUser = await newUser.save()
 
+    saveUser = await newUser.save()
 
     if (saveUser) {
       result = true
       token = saveUser.token
     }
   }
-  res.json({ result, error, token, artistList, artworkList })
+  res.json({ result, error, token })
 });
 
 router.post('/sign-in-google', async function (req, res, next) {
@@ -267,22 +288,21 @@ router.post('/sign-in-google', async function (req, res, next) {
   var token = null
   var artistList = []
   var artworkList = []
-  
-  user = await UserModel.findOne({ email: req.body.email,});
-    if (user) {
-      if (bcrypt.compareSync('google', user.password)) {
-        result = true
-        token = user.token
-        artistList = user.artistList
-        artworkList = user.artworkList
-      } else {
-        result = false
-        error.push('Not a GoogleSignIn user. Go back and Signin');
-        } 
-      } else {
-        result=false;
-        error.push("user doesn't exist");
+
+  user = await UserModel.findOne({ email: req.body.email });
+
+  if (user) {
+    if (bcrypt.compareSync('google', user.password)) {
+      result = true
+      token = user.token
+      artistList = user.artistList
+      artworkList = user.artworkList
+    } else {
+      error.push('Not a GoogleSignIn user. Go back and Signin');
     }
+  } else {
+    error.push("User doesn't exist");
+  }
   res.json({ result, error, token, artistList, artworkList })
 });
 
@@ -299,38 +319,41 @@ router.post('/sign-in', async function (req, res, next) {
   if (req.body.email == ''
     || req.body.password == ''
   ) {
-    error.push('Tous les champs doivent être remplis.')
+    error.push('All fields must be completed.')
   }
-  
+
   if (error.length == 0) {
     user = await UserModel.findOne({
       email: req.body.email,
     })
 
     if (user) {
-      
+
       if (bcrypt.compareSync(req.body.password, user.password)) {
+
         result = true
         token = user.token
         artistList = user.artistList
         artworkList = user.artworkList
+
       } else {
-        result = false
-        if (bcrypt.compareSync('google', user.password)){
+
+        if (bcrypt.compareSync('google', user.password)) {
           error.push('Go back and Signin via Google');
         } else {
-        error.push('Mot de passe incorrect');
+          error.push('Incorrect password');
         }
-      } 
+      }
+
     } else {
-        error.push('Mail incorrect')
+      error.push('Incorrect email')
     }
   }
-  console.log(token)
+
   res.json({ result, error, token, artistList, artworkList })
 });
 
-/* Landing Screen - auto-logged in */
+/* Landing Screen */
 
 router.get('/auto-loggedIn/:token', async function (req, res, next) {
 
@@ -340,7 +363,7 @@ router.get('/auto-loggedIn/:token', async function (req, res, next) {
   var result = false
 
   const user = await UserModel.findOne({ token: req.params.token })
-  console.log(user)
+
   if (user) {
     token = user.token
     artistList = user.artistList
@@ -352,14 +375,13 @@ router.get('/auto-loggedIn/:token', async function (req, res, next) {
 })
 
 
-/* Get exhibitions list Screen */
+/* ExhibitionScreen */
 
 router.get('/get-exhibitions/:token', async function (req, res, next) {
 
   //on récupère le token pour filtrer par la suite les résultats selon la ville du user
-  let user = await UserModel.findOne({ token: req.params.token })
+  const user = await UserModel.findOne({ token: req.params.token })
   const userCity = user.city
-  console.log(userCity)
 
   // on récupère toutes les expositions
   var data = request('GET', `https://public.opendatasoft.com/api/records/1.0/search/?dataset=evenements-publics-cibul&q=&rows=35&facet=tags&facet=placename&facet=department&facet=region&facet=city&facet=date_start&facet=date_end&facet=pricing_info&facet=updated_at&facet=city_district&refine.date_end=2022&refine.tags=Exposition`)
@@ -388,15 +410,15 @@ router.get('/get-exhibitions/:token', async function (req, res, next) {
   res.json({ listExpoBack, userCity })
 })
 
-router.post('/add-exhibitions/:token', async function (req, res, next) {
+router.post('/add-exhibitions', async function (req, res, next) {
 
-  let result = false;
-
-  result = await UserModel.updateOne({ token: req.body.token }, { $push: { expos: { title: req.body.title, place: req.body.place, address: req.body.address, date_start: req.body.date_start, date_end: req.body.date_end, city: req.body.city, img: req.body.img } } })
+  let result = await UserModel.updateOne({ token: req.body.token }, { $push: { expos: { title: req.body.title, place: req.body.place, address: req.body.address, date_start: req.body.date_start, date_end: req.body.date_end, city: req.body.city, img: req.body.img } } })
 
   if (result.modifiedCount != 0) {
     result = true
-  };
+  } else {
+    result = false
+  }
 
   const user = await UserModel.findOne({ token: req.body.token })
   const addedExpo = user.expos[user.expos.length - 1]
@@ -406,13 +428,13 @@ router.post('/add-exhibitions/:token', async function (req, res, next) {
 
 router.delete('/delete-exhibitions/:token/:title', async function (req, res, next) {
 
-  let result = false;
-
-  result = await UserModel.updateOne({ token: req.params.token }, { $pull: { expos: { title: req.params.title } } })
+  let result = await UserModel.updateOne({ token: req.params.token }, { $pull: { expos: { title: req.params.title } } })
 
   if (result.modifiedCount != 0) {
     result = true
-  };
+  } else {
+    result = false
+  }
 
   res.json({ result });
 });
@@ -425,63 +447,34 @@ router.get('/get-my-exhibitions/:token', async function (req, res, next) {
 });
 
 
-//Daily selection
+/* DailyScreen */
 
 router.get('/get-daily-selection/:token', async function (req, res, next) {
 
   // appel de l'algo de selection 
   var artworkSelections = await Recommend(req.params.token);
 
-  //pour chaque oeuvre de notre tableau, on récupère l'artiste (j'ai fait sans map() pour le moment histoire de bien comprendre)
+  //pour chaque oeuvre de notre tableau dailyArrau, on récupère l'artiste 
   const artist0 = await ArtistModel.findOne({ artistArtwork: { $in: artworkSelections.dailyArray[0]._id } }).populate('artistArtwork')
   const artist1 = await ArtistModel.findOne({ artistArtwork: { $in: artworkSelections.dailyArray[1]._id } }).populate('artistArtwork')
   const artist2 = await ArtistModel.findOne({ artistArtwork: { $in: artworkSelections.dailyArray[2]._id } }).populate('artistArtwork')
   const artist3 = await ArtistModel.findOne({ artistArtwork: { $in: artworkSelections.dailyArray[3]._id } }).populate('artistArtwork')
 
-  let isFav0 = await UserModel.findOne({ token: req.params.token, artworkList: { $in: artworkSelections.dailyArray[0]._id } })
-  let isFav1 = await UserModel.findOne({ token: req.params.token, artworkList: { $in: artworkSelections.dailyArray[1]._id } })
-  let isFav2 = await UserModel.findOne({ token: req.params.token, artworkList: { $in: artworkSelections.dailyArray[2]._id } })
-  let isFav3 = await UserModel.findOne({ token: req.params.token, artworkList: { $in: artworkSelections.dailyArray[3]._id } })
-
-  if (isFav0) {
-    isFav0 = true
-  } else {
-    isFav0 = false
-  }
-
-  if (isFav1) {
-    isFav1 = true
-  } else {
-    isFav1 = false
-  }
-
-  if (isFav2) {
-    isFav2 = true
-  } else {
-    isFav2 = false
-  }
-
-  if (isFav3) {
-    isFav3 = true
-  } else {
-    isFav3 = false
-  }
-
 
   //on créé le tableau qui sera renvoyé au front, où chaque élément est un objet qui contient l'oeuvre avec l'artiste qui lui correspond
   const artworksWithArtists = [
-    { artwork: artworkSelections.dailyArray[0], artist: artist0, isFav: isFav0 },
-    { artwork: artworkSelections.dailyArray[1], artist: artist1, isFav: isFav1 },
-    { artwork: artworkSelections.dailyArray[2], artist: artist2, isFav: isFav2 },
-    { artwork: artworkSelections.dailyArray[3], artist: artist3, isFav: isFav3 }
+    { artwork: artworkSelections.dailyArray[0], artist: artist0 },
+    { artwork: artworkSelections.dailyArray[1], artist: artist1 },
+    { artwork: artworkSelections.dailyArray[2], artist: artist2 },
+    { artwork: artworkSelections.dailyArray[3], artist: artist3 }
   ]
 
   res.json({ artworksWithArtists });
 });
 
-// Profile screen
+/* Profile screen */
 
-router.get('/get-username/:token', async function (req, res, next) {
+router.get('/get-user-info-profile/:token', async function (req, res, next) {
 
   const user = await UserModel.findOne({ token: req.params.token })
 
@@ -493,17 +486,17 @@ router.get('/get-username/:token', async function (req, res, next) {
 })
 
 
-//Settings screen
-router.get('/get-user-info/:token', async function (req, res, next) {
+/* Settings screen */
+
+router.get('/get-user-info-settings/:token', async function (req, res, next) {
 
   const user = await UserModel.findOne({ token: req.params.token })
 
   const city = user.city;
-  const email = user.email
   const mediums = user.mediums;
   const categories = user.categories;
 
-  res.json({ city, email, mediums, categories })
+  res.json({ city, mediums, categories })
 })
 
 router.put('/update-city/:token', async function (req, res, next) {
@@ -515,14 +508,6 @@ router.put('/update-city/:token', async function (req, res, next) {
   res.json({ city })
 })
 
-router.put('/update-email/:token', async function (req, res, next) {
-
-  await UserModel.updateOne({ token: req.params.token }, { email: req.body.email })
-  const user = await UserModel.findOne({ token: req.params.token });
-  const email = user.email
-
-  res.json({ email })
-})
 
 router.put('/update-password/:token', async function (req, res, next) {
 
@@ -555,7 +540,7 @@ router.put('/update-mediums/:token', async function (req, res, next) {
   res.json({ mediums })
 })
 
-router.post('/update-avatar/:token', async function (req, res, next) {
+router.put('/update-avatar/:token', async function (req, res, next) {
 
   var pictureName = './tmp/' + uniqid() + '.jpg';
   var resultCopy = await req.files.avatar.mv(pictureName);
@@ -572,6 +557,8 @@ router.post('/update-avatar/:token', async function (req, res, next) {
 
   res.json({ img })
 })
+
+/* StatisticsScreen */
 
 router.get('/get-statistics/:token', async function (req, res, next) {
 
