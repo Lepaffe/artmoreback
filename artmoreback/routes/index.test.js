@@ -1,6 +1,6 @@
 var app = require('../app')
 var request = require('supertest')
-
+var mongoose = require('mongoose')
 test('test signin Classique', async () => {
     var response =  await request(app)
         .post('/sign-in')
@@ -18,16 +18,16 @@ test("verification sign-up classique", async () => {
         .post('/sign-up')
         .send({
             firstName: "Jean",
-            lastName: "Dupont2",
+            lastName: "Dupond2",
             city: 'Paris',
             mediums: JSON.stringify(["Painting", "Sculpture"]),
             categories: JSON.stringify(["Abstract", "Landscape"]),
             birthday: "1980-12-04T11:08:46.000+00:00",
-            email: "jean.dupont2@gmail.com",
+            email: "jean.dupond2@gmail.com",
             password: "Azerty123"
         })
         .then ((response) => {
-            console.log('repsonse2', response)
+            console.log('repsonse2', response.body)
             expect(response.body.result).toBeTruthy()
         })
 })
@@ -49,4 +49,9 @@ test("verification sign-up classique - email alreadyin", async () => {
             console.log('repsonse2', response.body)
             expect(response.body.error[0]).toBe('This email is already taken.')
         })
+    
 })
+afterAll(done => {
+    mongoose.connection.close()
+    done();
+});
