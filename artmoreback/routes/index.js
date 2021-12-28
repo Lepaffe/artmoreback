@@ -49,13 +49,6 @@ router.post('/dislike', async function (req, res, next) {
   if (!alreadyIn) {
     //on ajoute l'oeuvre aux Disliked
     var result = await UserModel.updateOne({ token: req.body.token }, { $push: { artworkDisliked: { _id: req.body.artworkId } } })
-
-    //on verifie que l'oeuvre n'etait pas dans les Liked  ////////// 
-    let isLiked = await UserModel.findOne({ token: req.body.token, artworkLiked: { $in: req.body.artworkId } });
-    //on verifie que l'oeuvre n'est pas deja dans les Liked si oui on la retire des liked 
-    if (isLiked) {
-      var result2 = await UserModel.updateOne({ token: req.body.token }, { $pull: { artworkLiked: { $in: req.body.artworkId } } })
-    }
   }
 
   res.json({ result })
