@@ -2,7 +2,7 @@ var app = require('../app')
 var request = require('supertest')
 var mongoose = require('mongoose')
 test('test signin Classique', async () => {
-    var response =  await request(app)
+    const response =  await request(app)
         .post('/sign-in')
         .send({ email: 'Syl@gmail.com', password: 'test1234' })
         .expect(200)

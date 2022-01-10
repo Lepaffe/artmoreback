@@ -1,6 +1,6 @@
-var mongoose = require('mongoose')
+const mongoose = require('mongoose')
 
-var options = {
+const options = {
     connectTimeoutMS: 5000,
     useUnifiedTopology: true,
     useNewUrlParser: true,

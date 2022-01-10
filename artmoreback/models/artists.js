@@ -1,6 +1,6 @@
-var mongoose = require('mongoose')
+const mongoose = require('mongoose')
 
-var artistSchema = mongoose.Schema({
+const artistSchema = mongoose.Schema({
     name: String,
     instagram: String,
     city: String,

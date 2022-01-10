@@ -1,10 +1,10 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
 
 /* Require Models*/
-var ArtistModel = require('../models/artists')
-var ArtworkModel = require('../models/artworks')
-var UserModel = require('../models/users')
+const ArtistModel = require('../models/artists')
+const ArtworkModel = require('../models/artworks')
+const UserModel = require('../models/users')
 
 const Recommend = async (token) => {
     
@@ -19,8 +19,8 @@ const Recommend = async (token) => {
         return array;
       }
 
-    var artworks = await ArtworkModel.find(); // on recupere toutes les oeuvres
-    var user = await UserModel.findOne({ token: token })
+    let artworks = await ArtworkModel.find(); // on recupere toutes les oeuvres
+    let user = await UserModel.findOne({ token: token })
         .populate('artworkList')
         .populate('artworkLiked')
         .populate('artworkDisliked')
@@ -28,7 +28,7 @@ const Recommend = async (token) => {
         .exec(); // on récupère le user avec toutes ses listes 
     
     if (user) {
-        //on enlève les oeuvres dislikées, favorite ou likées
+        //on enlève les oeuvres dislikées, favorites ou likées
         let temp = user.artworkList.concat(user.artworkLiked).concat(user.artworkDisliked);
         for (let i = 0; i < temp.length; i++) {
             artworks = artworks.filter(e => e.name !== temp[i].name);
@@ -39,8 +39,8 @@ const Recommend = async (token) => {
         //  - ArtworkFavMediums = tableaux des oeuvres correspondantes aux mediums préférés
         //  - ArtworlAltMediums = tableaux des autres oeuvres restantes
 
-        var artworksFavMediums = [];
-        var artworksAltMediums = artworks;
+        let artworksFavMediums = [];
+        let artworksAltMediums = artworks;
         for (let i = 0; i < user.mediums.length; i++) {
             //on filtre en gardant uniquement les oeuvres de chaque medium préféré du user
             let temp = artworks.filter(e => e.medium === user.mediums[i])
@@ -55,9 +55,9 @@ const Recommend = async (token) => {
         //  - artworksFavMediumsAltCat = tableaux des autres correspondantes aux mediums préférés & categories alternatives
         //  - artworksAltMediumsFavCat = tableaux des oeuvres correspondantes aux mediums alternatifs & categories préférées
 
-        var artworksFavMediumsFavCat = [];
-        var artworksFavMediumsAltCat = artworksFavMediums;
-        var artworksAltMediumsFavCat = [];
+        let artworksFavMediumsFavCat = [];
+        let artworksFavMediumsAltCat = artworksFavMediums;
+        let artworksAltMediumsFavCat = [];
 
         for (let i = 0; i < user.categories.length; i++) {
 
@@ -76,52 +76,51 @@ const Recommend = async (token) => {
         //console.log('set2', artworksFavMediumsAltCat, artworksFavMediumsAltCat.length);
         //console.log('set3', artworksAltMediumsFavCat, artworksAltMediumsFavCat.length);
 
-    // On mélange les oeuvres aléatoirement de chaque tableau 
+        // On mélange les oeuvres aléatoirement de chaque tableau 
 
-    artworksFavMediumsFavCat=shuffleArray(artworksFavMediumsFavCat);
-    artworksFavMediumsAltCat=shuffleArray(artworksFavMediumsAltCat);
-    artworksAltMediumsFavCat=shuffleArray(artworksAltMediumsFavCat);
-    //On prend 70% du set 1, 20% du set 2 et 10% du set 3
-    let total100= artworksFavMediumsFavCat.length+artworksFavMediumsAltCat.length+artworksAltMediumsFavCat.length;
-    let nbSet1= Math.round(total100*0.7);
-    let nbSet2= Math.round(total100*0.2);
-    let nbSet3= Math.round(total100*0.1);
-    console.log('nbSet',total100, nbSet1, nbSet2, nbSet3);
+        artworksFavMediumsFavCat=shuffleArray(artworksFavMediumsFavCat);
+        artworksFavMediumsAltCat=shuffleArray(artworksFavMediumsAltCat);
+        artworksAltMediumsFavCat=shuffleArray(artworksAltMediumsFavCat);
+        //On prend 70% du set 1, 20% du set 2 et 10% du set 3
+        let total100= artworksFavMediumsFavCat.length+artworksFavMediumsAltCat.length+artworksAltMediumsFavCat.length;
+        let nbSet1= Math.round(total100*0.7);
+        let nbSet2= Math.round(total100*0.2);
+        let nbSet3= Math.round(total100*0.1);
+        console.log('nbSet',total100, nbSet1, nbSet2, nbSet3);
     
-    //creation de la dailySelection une fois par jour et de la swipe selection
-    var swipeArray=[];
-    var dailyArray=[];
-    let today=new Date();
-    today=today.getDay();
-    //console.log('user today',user);
-    if (user.daily.day != undefined && today===user.daily.day){
-        //si même journée on garde la même selection
-        dailyArray= user.daily.selection;
-        //on retire la selection du nouveau tableau Swipable
-        for (let i=0; i< dailyArray.length; i++){
-            artworksFavMediumsFavCat=artworksFavMediumsFavCat.filter(e => e._id !== dailyArray[i]._id)
-        } 
-        swipeArray=artworksFavMediumsFavCat.slice(0,nbSet1)
-                    .concat(artworksFavMediumsAltCat.slice(0,nbSet2))
-                    .concat(artworksAltMediumsFavCat.slice(0,nbSet3));
-    } else {
-        dailyArray=artworksFavMediumsFavCat.slice(0,4);
-        swipeArray=artworksFavMediumsFavCat.slice(4,4+nbSet1)
-                    .concat(artworksFavMediumsAltCat.slice(0,nbSet2))
-                    .concat(artworksAltMediumsFavCat.slice(0,nbSet3));
-         // on sauveagarde la dailyselection et le jour dans la base (reconnexion d'un autre eqpt)
-        await UserModel.updateOne(
-            { token: token },
-            { daily : { day: today,
-                        selection: dailyArray}
-            });
-    }
-    // on remelange le tableau de swipe
-    swipeArray=shuffleArray(swipeArray);
-   
-   
-    //console.log('daily', dailyArray);
-    return {swipeArray,dailyArray}
- }   
+        //creation de la dailySelection une fois par jour et de la swipe selection
+        let swipeArray=[];
+        let dailyArray=[];
+        let today=new Date();
+        today=today.getDay();
+        //console.log('user today',user);
+        if (user.daily.day != undefined && today===user.daily.day){
+            //si même journée on garde la même selection
+            dailyArray= user.daily.selection;
+            //on retire la selection du nouveau tableau Swipable
+            for (let i=0; i< dailyArray.length; i++){
+                artworksFavMediumsFavCat=artworksFavMediumsFavCat.filter(e => e._id !== dailyArray[i]._id)
+            } 
+            swipeArray=artworksFavMediumsFavCat.slice(0,nbSet1)
+                        .concat(artworksFavMediumsAltCat.slice(0,nbSet2))
+                        .concat(artworksAltMediumsFavCat.slice(0,nbSet3));
+        } else {
+            dailyArray=artworksFavMediumsFavCat.slice(0,4);
+            swipeArray=artworksFavMediumsFavCat.slice(4,4+nbSet1)
+                        .concat(artworksFavMediumsAltCat.slice(0,nbSet2))
+                        .concat(artworksAltMediumsFavCat.slice(0,nbSet3));
+            // on sauveagarde la dailyselection et le jour dans la base (reconnexion d'un autre eqpt)
+            await UserModel.updateOne(
+                { token: token },
+                { daily : { day: today,
+                            selection: dailyArray}
+                });
+        }
+        // on remelange le tableau de swipe
+        swipeArray=shuffleArray(swipeArray);   
+    
+        //console.log('daily', dailyArray);
+        return {swipeArray,dailyArray}
+    }   
 }
 module.exports = Recommend
